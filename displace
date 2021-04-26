@@ -1,0 +1,349 @@
+#!/usr/bin/python3
+
+# https://github.com/python-xlib/python-xlib
+# https://stackoverflow.com/questions/8705814/get-display-count-and-resolution-for-each-display-in-python-without-xrandr
+
+import argparse
+import hashlib
+import os
+import struct
+from collections import OrderedDict
+from Xlib import X, display
+from Xlib.ext import randr
+
+# port entries may contain:
+#           location: any of:
+#                   tuple (x,y)               e.g. (0, 0)
+#                   tuple (direction, port)   e.g. ("left-of", "Text:BenQ_LCD")
+#                                             direction can be any of "above",
+#                                             "right-of", "left-of", "below".
+#                                             port can be a port-name or a
+#                                             display name, or "previous".
+#           mode: any of:
+#                   tuple (width, height)
+#                   str "max_area" or "max_width"
+#           primary: bool
+#           rotate: str (one of "normal", "left", "right", "inverted")
+#           scale: tuple (width-scale, height-scale)
+
+
+portrait = OrderedDict([
+        ("Text:ATNA33TP06-0", {"location": (0, 0),
+                               "mode": "max_area",
+                               "primary": True})])
+landscape = OrderedDict([
+        ("Text:ATNA33TP06-0", {"primary": True,
+                               "rotate": "left"})])
+dock = OrderedDict([
+        ("Name:BenQ_LCD",     {"scale": (2, 2),
+                               "rotate": "left"}),
+        ("Name:DELL_U2515H",  {"location": ("right-of", "previous"),
+                               "scale": (2, 2)}),
+        ("Text:ATNA33TP06-0", {"location": ("below", "previous"),
+                               "primary": True})])
+present_right = OrderedDict([
+        ("Text:ATNA33TP06-0", {"primary": True}),
+        ("HDMI-1",            {"scale": (2, 2),
+                               "location": ("right-of", "Text:ATNA33TP06-0")})])
+present_top = OrderedDict([
+        ("HDMI-1",            {"scale": (2, 2)}),
+        ("Text:ATNA33TP06-0", {"location": ("below", "HDMI-1"),
+                               "primary": True})])
+present_left = OrderedDict([
+        ("HDMI-1",            {"scale": (2, 2)}),
+        ("Text:ATNA33TP06-0", {"location": ("right-of", "HDMI-1"),
+                               "primary": True})])
+
+
+defined_setups = OrderedDict([
+        ("portrait",        portrait),
+        ("landscape",       landscape),
+        ("dock",            dock),
+        ("present_right",   present_right),
+        ("present_top",     present_top)])
+
+
+def _find_mode(id, modes):
+    for mode in modes:
+        if id == mode.id:
+            return (mode.width, mode.height)
+
+
+def output_port_infos():
+    """get a dict with information on all output ports"""
+    d = display.Display(os.environ.get("DISPLAY", ":0"))
+    screen_count = d.screen_count()
+    default_screen = d.get_default_screen()
+    result = []
+    screen = 0
+    info = d.screen(screen)
+    window = info.root
+    res = randr.get_screen_resources(window)
+    for output in res.outputs:
+        params = d.xrandr_get_output_info(output, res.config_timestamp)
+        if params.crtc:
+            crtc = d.xrandr_get_crtc_info(params.crtc, res.config_timestamp)
+            (width, height) = (crtc.width, crtc.height)
+        else:
+            (width, height) = (0, 0)
+        modes = {_find_mode(mode, res.modes) for mode in params.modes}
+        atoms = d.xrandr_list_output_properties(output).atoms
+        properties = {}
+        for atom in atoms:
+            propname = d.get_atom_name(atom)
+            propvalue = d.xrandr_get_output_property(output, atom,
+                                                     X.AnyPropertyType,
+                                                     0, 100, False, False)
+            propinfo = d.xrandr_query_output_property(output, atom)
+            properties[propname] = {"info": propinfo, "value": propvalue}
+        result.append({
+            'name': params.name,
+            'resolution': (width, height),
+            'available_resolutions': list(modes),
+            'properties': properties
+        })
+    return result
+
+
+def info2edid(info):
+    """extract EDID for given output info"""
+    identifiers = {}
+    try:
+        return bytes(info["properties"]["EDID"]["value"]._data["value"])
+    except Exception:
+        return None
+
+
+def edid2ident(edid):
+    """extract identifiers for given EDID"""
+    if edid is None:
+        return None
+    identifiers = []
+    for slot in ((54, 72), (72,90), (90,108), (108,126)):
+        desc = edid[slot[0]:slot[1]]
+        if desc[3] == 0xfc:
+            name = "Name:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
+            identifiers.append(name.replace(" ", "_"))
+        if desc[3] == 0xfe:
+            text = "Text:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
+            identifiers.append(text.replace(" ", "_"))
+    serial = struct.unpack("<I", edid[12:16])[0]
+    identifiers.append("Serial:%08x" % (serial))
+    identifiers.append("Md5:{}".format(hashlib.md5(edid).hexdigest()))
+    return identifiers
+
+
+def output_matches(info, ident):
+    """does the specified info match the given identifiers?"""
+    known = edid2ident(info2edid(info))
+    if known is None:
+        return False
+    if not isinstance(ident, list):
+        ident = [ident]
+    intersect = [x for x in ident if x in known]
+    return len(intersect) > 0
+
+
+def get_outputs(infs):
+    """return a description of all available outputs with connected monitors"""
+    return [(port["name"], edid2ident(info2edid(port))) for port in infs]
+
+
+def inf4ident(infs, ident, allow_disconnected=False):
+    """retrieve port name for given identifier.
+
+    unless @allow_disconnected, only ports with a connection are searched.
+    """
+    for port in infs:
+        if ident == port["name"]:
+            if allow_disconnected or port["available_resolutions"]:
+                return port
+        if output_matches(port, ident):
+            if allow_disconnected or port["available_resolutions"]:
+                return port
+    return None
+
+
+def port4ident(infs, ident, allow_disconnected=False):
+    """retrieve port name for given identifier.
+
+    unless @allow_disconnected, only ports with a connection are searched.
+    """
+    i = inf4ident(infs, ident, allow_disconnected)
+    return i["name"] if i is not None else None
+
+
+def filter_valid_setups(infs, setups):
+    valid = []
+    for setup in setups:
+        for output in setups[setup]:
+            if inf4ident(infs, output) is None:
+                break
+        else:
+            valid.append(setup)
+    return valid
+
+
+def xrandr(*args):
+    return os.system("xrandr " + " ".join(args))
+
+
+def apply_all_off(infs):
+    args = []
+    for port in infs:
+        args.append("--output")
+        args.append(port["name"])
+        args.append("--off")
+    xrandr(*args)
+
+
+def max_area_mode(modes):
+    m = (0, 0)
+    for mode in modes:
+        if mode[0]*mode[1] > m[0]*m[1]:
+            m = mode
+    return m
+
+
+def max_width_mode(modes):
+    m = (0, 0)
+    for mode in modes:
+        if mode[0] > m[0] or mode[0] == m[0] and mode[1] > m[1]:
+            m = mode
+    return m
+
+
+def apply_setup(infs, setup):
+    apply_all_off(infs)
+    previous_port = None
+    outputs = {}
+
+    # prepare and validate settings, rescale to 0x0
+    for output in setup:
+        inf = inf4ident(infs, output)
+        s = setup[output]
+        cfg = {}
+        cfg["port"] = port4ident(infs, output)
+        cfg["scale"] = s.get("scale", (1, 1))
+        cfg["rotate"] = s.get("rotate", "normal")
+        cfg["primary"] = s.get("primary", False)
+
+        cfg["location"] = s.get("location", (0, 0))
+        if isinstance(cfg["location"][0], str):
+            if cfg["location"][1] == "previous":
+                cfg["location"] = (cfg["location"][0], previous_port)
+            cfg["location"] = (cfg["location"][0], 
+                                port4ident(infs, cfg["location"][1]))
+            if cfg["location"][1] is None:
+                raise TypeError("invalid location '{}'".format(
+                                                s.get("location", None)))
+        cfg["mode"] = s.get("mode", "max_area")
+        if cfg["mode"] == "max_area":
+            cfg["mode"] = max_area_mode(inf["available_resolutions"])
+        elif cfg["mode"] == "max_width":
+            cfg["mode"] = max_width_mode(inf["available_resolutions"])
+        elif not isinstance(cfg["mode"], tuple):
+            raise TypeError("invalid mode '{}'".format(cfg["mode"]))
+        outputs[cfg["port"]] = cfg
+        previous_port = cfg["port"]
+
+    # translate given locations to absolute positions
+    unresolved = True
+    while unresolved:
+        unresolved = False
+        changed = False
+        for (output, cfg) in outputs.items():
+            if isinstance(cfg["location"][0], str):
+                other = outputs[cfg["location"][1]]
+                if isinstance(other["location"][0], str):
+                    unresolved = True
+                else:
+                    w, h = cfg["mode"]
+                    w, h = w*cfg["scale"][0], h*cfg["scale"][1]
+                    if cfg["rotate"] in ("left", "right"):
+                        h, w = w, h
+
+                    ox, oy = other["location"]
+                    ow, oh = other["mode"]
+                    ow, oh = ow*other["scale"][0], oh*other["scale"][1]
+                    if other["rotate"] in ("left", "right"):
+                        oy, ox = ox, oy
+                        oh, ow = ow, oh
+
+                    if cfg["location"][0] == "left-of":
+                        x = ox - w
+                        y = oy
+                    elif cfg["location"][0] == "right-of":
+                        x = ox + ow
+                        y = oy
+                    elif cfg["location"][0] == "above":
+                        x = ox
+                        y = oy - h
+                    elif cfg["location"][0] == "below":
+                        x = ox
+                        y = oy + oh
+                    else:
+                        raise ValueError("unknown relative location {}".format(
+                                         cfg["location"]))
+                    cfg["location"] = (x, y)
+                    changed = True
+
+        if unresolved and not changed:
+            print(outputs)
+            raise ValueError("unable to resolve relative positioning:")
+
+    # normalize to (0, 0)
+    offset_x = min((cfg["location"][0] for cfg in outputs.values()))
+    offset_y = min((cfg["location"][1] for cfg in outputs.values()))
+    for (port, cfg) in outputs.items():
+        cfg["location"] = (cfg["location"][0] - offset_x,
+                           cfg["location"][1] - offset_y)
+
+    # identify framebuffer size
+    # FIXME ???
+
+    # actually configure displays
+    for (port, cfg) in outputs.items():
+        args = ["--output", cfg["port"],
+                "--scale", "{}x{}".format(*cfg["scale"]),
+                "--rotate", cfg["rotate"],
+                "--pos", "{}x{}".format(cfg["location"][0],
+                                        cfg["location"][1]),
+                "--mode", "{}x{}".format(cfg["mode"][0],
+                                         cfg["mode"][1]),
+                ]
+
+        if cfg["primary"]:
+            args += ["--primary"]
+
+        xrandr(*args)
+
+    
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("selection", nargs='?')
+    args = parser.parse_args()
+    infs = output_port_infos()
+    valid_setups = filter_valid_setups(infs, defined_setups)
+    if args.selection is None:
+        print("current outputs:")
+        for (port, display) in get_outputs(infs):
+            if display:
+                inf = inf4ident(infs, port, allow_disconnected=True)
+                print(" - {} <-> {}".format(port, display))
+                #print("     modes {}".format(" ".join(("{}x{}".format(x, y)
+                #                for (x,y) in inf["available_resolutions"]))))
+            else:
+                print(" - {}".format(port))
+        print()
+        print("currently valid selections:")
+        for s in valid_setups:
+            print(" - {}".format(s))
+    else:
+        if args.selection not in defined_setups:
+            parser.error("{} is not a known setup".format(args.selection))
+        if args.selection not in valid_setups:
+            parser.error("{} is currently not a valid setup".format(args.selection))
+
+        apply_setup(infs, defined_setups[args.selection])
