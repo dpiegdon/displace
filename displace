@@ -7,60 +7,132 @@ import argparse
 import hashlib
 import os
 import struct
-from collections import OrderedDict
+import time
+from collections import OrderedDict, namedtuple
 from Xlib import X, display
 from Xlib.ext import randr
 
-# port entries may contain:
-#           location: any of:
-#                   tuple (x,y)               e.g. (0, 0)
-#                   tuple (direction, port)   e.g. ("left-of", "Text:BenQ_LCD")
-#                                             direction can be any of "above",
-#                                             "right-of", "left-of", "below".
-#                                             port can be a port-name or a
-#                                             display name, or "previous".
-#           mode: any of:
-#                   tuple (width, height)
-#                   str "max_area" or "max_width"
-#           primary: bool
-#           rotate: str (one of "normal", "left", "right", "inverted")
-#           scale: tuple (width-scale, height-scale)
+
+class DesktopSetup:
+    def __init__(self, *outputs, postexec=None):
+        self.__outputs = OrderedDict(outputs)
+        self.__postexec = postexec if postexec else []
+
+    @property
+    def outputs(self):
+        return self.__outputs
+
+    @property
+    def postexec(self):
+        return self.__postexec
+
+    def __str__(self):
+        return ("<DesktopSetup outputs:\n\t"
+                + "\n\t".join(("{} -> {}".format(p, c) for p,c in self.outputs.items()))
+                + "\n  postexec:\n\t"
+                + "\n\t".join(self.postexec)
+                + ">")
 
 
-portrait = OrderedDict([
-        ("Text:ATNA33TP06-0", {"location": (0, 0),
-                               "mode": "max_area",
-                               "primary": True})])
-landscape = OrderedDict([
-        ("Text:ATNA33TP06-0", {"primary": True,
-                               "rotate": "left"})])
-dock = OrderedDict([
-        ("Name:BenQ_LCD",     {"scale": (2, 2),
-                               "rotate": "left"}),
-        ("Name:DELL_U2515H",  {"location": ("right-of", "previous"),
-                               "scale": (2, 2)}),
-        ("Text:ATNA33TP06-0", {"location": ("below", "previous"),
-                               "primary": True})])
-present_right = OrderedDict([
-        ("Text:ATNA33TP06-0", {"primary": True}),
-        ("HDMI-1",            {"scale": (2, 2),
-                               "location": ("right-of", "Text:ATNA33TP06-0")})])
-present_top = OrderedDict([
-        ("HDMI-1",            {"scale": (2, 2)}),
-        ("Text:ATNA33TP06-0", {"location": ("below", "HDMI-1"),
-                               "primary": True})])
-present_left = OrderedDict([
-        ("HDMI-1",            {"scale": (2, 2)}),
-        ("Text:ATNA33TP06-0", {"location": ("right-of", "HDMI-1"),
-                               "primary": True})])
+def OutputSetup(name, **kwargs):
+    # port entries may contain:
+    #           location: any of:
+    #                   tuple (x,y)               e.g. (0, 0)
+    #                   tuple (direction, port)   e.g. ("left-of", "Text:BenQ_LCD")
+    #                                             direction can be any of "above",
+    #                                             "right-of", "left-of", "below".
+    #                                             port can be a port-name or a
+    #                                             display name, or "previous".
+    #           mode: any of:
+    #                   tuple (width, height)
+    #                   str "max_area" or "max_width"
+    #           primary: bool
+    #           rotate: str (one of "normal", "left", "right", "inverted")
+    #           scale: tuple (width-scale, height-scale)
+    # FIXME:
+    # location=(x,y) or (direction,port,align)
+    # FIXME: make explicit params with sane defaults?
+    return (name, kwargs)
 
 
+def ATNA33TP06(primary=True, mode="max_area", **kwargs):
+    return OutputSetup("Text:ATNA33TP06-0", primary=primary, mode=mode, **kwargs)
+
+
+lowdpi_scale = (1, 1)
+highdpi_scale = (2, 2)
+def setdpi(scale):
+    return [
+        r"sed -i -e 's/^Xft.dpi:[ \t].*$/Xft.dpi: {}/'               ~/.Xdefaults".format(
+            215 if scale[0] >= 1.5 else 120),
+        r"sed -i -e 's/^XTerm.faceSize:[ \t].*$/XTerm*faceSize: {}/' ~/.Xdefaults".format(
+            15 if scale[0] >= 1.5 else 10),
+        r"xrdb ~/.Xdefaults"
+        ]
+
+
+DESK = DesktopSetup
+OUT = OutputSetup
+
+
+highdpi_landscape = DESK(
+        ATNA33TP06(),
+        postexec = setdpi(highdpi_scale)
+        )
+
+lowdpi_landscape = DESK(
+        ATNA33TP06(mode=(2560, 1440)),
+        postexec = setdpi(lowdpi_scale)
+        )
+
+portrait = DESK(ATNA33TP06(rotate=True))
+
+highdpi_dock = DESK(
+        OUT("Name:BenQ_LCD", scale=highdpi_scale, rotate="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous"), scale=highdpi_scale),
+        ATNA33TP06(location=("below", "previous")),
+        postexec = setdpi(highdpi_scale)
+        )
+
+
+lowdpi_dock = DESK(
+        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous"), scale=lowdpi_scale),
+        ATNA33TP06(location=("below", "previous"), mode=(2560, 1440)),
+        postexec = setdpi(lowdpi_scale)
+        )
+
+present_right = DESK(
+        ATNA33TP06(),
+        OUT("HDMI-1", scale=highdpi_scale, location=("right-of", "Text:ATNA33TP06-0")),
+        postexec = setdpi(highdpi_scale)
+        )
+
+present_top = DESK(
+        OUT("HDMI-1", scale=highdpi_scale),
+        ATNA33TP06(location=("below", "HDMI-1")),
+        postexec = setdpi(highdpi_scale)
+        )
+
+present_left = DESK(
+        OUT("HDMI-1", scale=highdpi_scale),
+        ATNA33TP06(location=("right-of", "HDMI-1")),
+        postexec = setdpi(highdpi_scale)
+        )
+
+
+# order defines priority for --auto:
 defined_setups = OrderedDict([
-        ("portrait",        portrait),
-        ("landscape",       landscape),
-        ("dock",            dock),
-        ("present_right",   present_right),
-        ("present_top",     present_top)])
+        ("hidock",            highdpi_dock),
+        ("lodock",            lowdpi_dock),
+        ("hiscape",           highdpi_landscape),
+        ("loscape",           lowdpi_landscape),
+        ("portrait",          portrait),
+        ("present_right",     present_right),
+        ("present_top",       present_top)])
+
+
+postexec_all = ["pgrep qtile && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
 
 
 def _find_mode(id, modes):
@@ -176,7 +248,7 @@ def port4ident(infs, ident, allow_disconnected=False):
 def filter_valid_setups(infs, setups):
     valid = []
     for setup in setups:
-        for output in setups[setup]:
+        for output in setups[setup].outputs:
             if inf4ident(infs, output) is None:
                 break
         else:
@@ -185,7 +257,9 @@ def filter_valid_setups(infs, setups):
 
 
 def xrandr(*args):
-    return os.system("xrandr " + " ".join(args))
+    cmd = "xrandr " + " ".join(args)
+    print("EXEC {}".format(cmd))
+    return os.system(cmd)
 
 
 def apply_all_off(infs):
@@ -219,9 +293,9 @@ def apply_setup(infs, setup):
     outputs = {}
 
     # prepare and validate settings, rescale to 0x0
-    for output in setup:
+    for output in setup.outputs:
         inf = inf4ident(infs, output)
-        s = setup[output]
+        s = setup.outputs[output]
         cfg = {}
         cfg["port"] = port4ident(infs, output)
         cfg["scale"] = s.get("scale", (1, 1))
@@ -232,7 +306,7 @@ def apply_setup(infs, setup):
         if isinstance(cfg["location"][0], str):
             if cfg["location"][1] == "previous":
                 cfg["location"] = (cfg["location"][0], previous_port)
-            cfg["location"] = (cfg["location"][0], 
+            cfg["location"] = (cfg["location"][0],
                                 port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
@@ -259,13 +333,15 @@ def apply_setup(infs, setup):
                     unresolved = True
                 else:
                     w, h = cfg["mode"]
-                    w, h = w*cfg["scale"][0], h*cfg["scale"][1]
+                    w = int(w * cfg["scale"][0])
+                    h = int(h * cfg["scale"][1])
                     if cfg["rotate"] in ("left", "right"):
                         h, w = w, h
 
                     ox, oy = other["location"]
                     ow, oh = other["mode"]
-                    ow, oh = ow*other["scale"][0], oh*other["scale"][1]
+                    ow = int(ow * other["scale"][0])
+                    oh = int(oh * other["scale"][1])
                     if other["rotate"] in ("left", "right"):
                         oy, ox = ox, oy
                         oh, ow = ow, oh
@@ -300,7 +376,7 @@ def apply_setup(infs, setup):
                            cfg["location"][1] - offset_y)
 
     # identify framebuffer size
-    # FIXME ???
+    # FIXME? seems to be optional.
 
     # actually configure displays
     for (port, cfg) in outputs.items():
@@ -318,32 +394,65 @@ def apply_setup(infs, setup):
 
         xrandr(*args)
 
-    
+    time.sleep(.5)
+    # execute any registered postexec things
+    for cmd in postexec_all:
+        print("EXEC {}".format(cmd))
+        os.system(cmd)
+    for cmd in setup.postexec:
+        print("EXEC {}".format(cmd))
+        os.system(cmd)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("selection", nargs='?')
+    parser.add_argument("-a", "--auto", action="store_true",
+                        help="try to pick a good choice")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="show additional diagnostic and info")
     args = parser.parse_args()
     infs = output_port_infos()
     valid_setups = filter_valid_setups(infs, defined_setups)
-    if args.selection is None:
-        print("current outputs:")
+    if args.selection is None and not args.auto:
+        print("available ports:")
         for (port, display) in get_outputs(infs):
             if display:
                 inf = inf4ident(infs, port, allow_disconnected=True)
-                print(" - {} <-> {}".format(port, display))
-                #print("     modes {}".format(" ".join(("{}x{}".format(x, y)
-                #                for (x,y) in inf["available_resolutions"]))))
+                mode = "{}x{}".format(*inf["resolution"])
+                if mode == "0x0":
+                    mode = "off"
+                print(" - {port}, {mode}, connected to {display}".format(
+                      port=port,
+                      mode=mode,
+                      display=display if args.verbose else display[0]))
+                if args.verbose:
+                    print("   has modes:")
+                    for (w, h) in inf["available_resolutions"]:
+                        print("     {}x{}".format(w, h))
             else:
                 print(" - {}".format(port))
         print()
-        print("currently valid selections:")
+        print("currently valid selections, in order of priority:")
         for s in valid_setups:
             print(" - {}".format(s))
     else:
-        if args.selection not in defined_setups:
-            parser.error("{} is not a known setup".format(args.selection))
-        if args.selection not in valid_setups:
-            parser.error("{} is currently not a valid setup".format(args.selection))
+        if args.selection and args.auto:
+            parser.error("cannot --auto and select")
 
-        apply_setup(infs, defined_setups[args.selection])
+        selection = args.selection
+        if args.auto:
+            valid_setups = filter_valid_setups(infs, defined_setups)
+            if valid_setups:
+                selection = valid_setups[0]
+
+        if selection not in defined_setups:
+            parser.error("{} is not a known setup".format(selection))
+        if selection not in valid_setups:
+            parser.error("{} is currently not a valid setup".format(selection))
+
+        print("picking: {}".format(selection))
+        if args.verbose:
+            print(defined_setups[selection])
+        apply_setup(infs, defined_setups[selection])
