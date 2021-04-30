@@ -4,213 +4,12 @@
 # https://stackoverflow.com/questions/8705814/get-display-count-and-resolution-for-each-display-in-python-without-xrandr
 
 import argparse
-import hashlib
 import os
-import struct
 import time
-from collections import OrderedDict, namedtuple
-from Xlib import X, display
-from Xlib.ext import randr
 
-
-class DesktopSetup:
-    def __init__(self, *outputs, postexec=None):
-        self.__outputs = OrderedDict(outputs)
-        self.__postexec = postexec if postexec else []
-
-    @property
-    def outputs(self):
-        return self.__outputs
-
-    @property
-    def postexec(self):
-        return self.__postexec
-
-    def __str__(self):
-        return ("<DesktopSetup outputs:\n\t"
-                + "\n\t".join(("{} -> {}".format(p, c) for p,c in self.outputs.items()))
-                + "\n  postexec:\n\t"
-                + "\n\t".join(self.postexec)
-                + ">")
-
-
-def OutputSetup(name, **kwargs):
-    # port entries may contain:
-    #           location: any of:
-    #                   tuple (x,y)               e.g. (0, 0)
-    #                   tuple (direction, port)   e.g. ("left-of", "Text:BenQ_LCD")
-    #                                             direction can be any of "above",
-    #                                             "right-of", "left-of", "below".
-    #                                             port can be a port-name or a
-    #                                             display name, or "previous".
-    #           mode: any of:
-    #                   tuple (width, height)
-    #                   str "max_area" or "max_width"
-    #           primary: bool
-    #           rotate: str (one of "normal", "left", "right", "inverted")
-    #           scale: tuple (width-scale, height-scale)
-    # FIXME:
-    # location=(x,y) or (direction,port,align)
-    # FIXME: make explicit params with sane defaults?
-    return (name, kwargs)
-
-
-def ATNA33TP06(primary=True, mode="max_area", **kwargs):
-    return OutputSetup("Text:ATNA33TP06-0", primary=primary, mode=mode, **kwargs)
-
-
-lowdpi_scale = (1, 1)
-highdpi_scale = (2, 2)
-def setdpi(scale):
-    return [
-        r"sed -i -e 's/^Xft.dpi:[ \t].*$/Xft.dpi: {}/'               ~/.Xdefaults".format(
-            215 if scale[0] >= 1.5 else 120),
-        r"sed -i -e 's/^XTerm.faceSize:[ \t].*$/XTerm*faceSize: {}/' ~/.Xdefaults".format(
-            15 if scale[0] >= 1.5 else 10),
-        r"xrdb ~/.Xdefaults"
-        ]
-
-
-DESK = DesktopSetup
-OUT = OutputSetup
-
-
-highdpi_landscape = DESK(
-        ATNA33TP06(),
-        postexec = setdpi(highdpi_scale)
-        )
-
-lowdpi_landscape = DESK(
-        ATNA33TP06(mode=(2560, 1440)),
-        postexec = setdpi(lowdpi_scale)
-        )
-
-portrait = DESK(ATNA33TP06(rotate=True))
-
-highdpi_dock = DESK(
-        OUT("Name:BenQ_LCD", scale=highdpi_scale, rotate="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous"), scale=highdpi_scale),
-        ATNA33TP06(location=("below", "previous")),
-        postexec = setdpi(highdpi_scale)
-        )
-
-
-lowdpi_dock = DESK(
-        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous"), scale=lowdpi_scale),
-        ATNA33TP06(location=("below", "previous"), mode=(2560, 1440)),
-        postexec = setdpi(lowdpi_scale)
-        )
-
-present_right = DESK(
-        ATNA33TP06(),
-        OUT("HDMI-1", scale=highdpi_scale, location=("right-of", "Text:ATNA33TP06-0")),
-        postexec = setdpi(highdpi_scale)
-        )
-
-present_top = DESK(
-        OUT("HDMI-1", scale=highdpi_scale),
-        ATNA33TP06(location=("below", "HDMI-1")),
-        postexec = setdpi(highdpi_scale)
-        )
-
-present_left = DESK(
-        OUT("HDMI-1", scale=highdpi_scale),
-        ATNA33TP06(location=("right-of", "HDMI-1")),
-        postexec = setdpi(highdpi_scale)
-        )
-
-central = DESK(
-        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        OUT("Name:EA232WMi", location=("right-of", "previous"), rotate="left"),
-        postexec = []
-        )
-
-
-# order defines priority for --auto:
-defined_setups = OrderedDict([
-        ("hidock",            highdpi_dock),
-        ("lodock",            lowdpi_dock),
-        ("hiscape",           highdpi_landscape),
-        ("loscape",           lowdpi_landscape),
-        ("portrait",          portrait),
-        ("present_right",     present_right),
-        ("present_top",       present_top),
-        ("central",           central)])
-
-
-postexec_all = ["pgrep qtile && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
-
-
-def _find_mode(id, modes):
-    for mode in modes:
-        if id == mode.id:
-            return (mode.width, mode.height)
-
-
-def output_port_infos():
-    """get a dict with information on all output ports"""
-    d = display.Display(os.environ.get("DISPLAY", ":0"))
-    screen_count = d.screen_count()
-    default_screen = d.get_default_screen()
-    result = []
-    screen = 0
-    info = d.screen(screen)
-    window = info.root
-    res = randr.get_screen_resources(window)
-    for output in res.outputs:
-        params = d.xrandr_get_output_info(output, res.config_timestamp)
-        if params.crtc:
-            crtc = d.xrandr_get_crtc_info(params.crtc, res.config_timestamp)
-            (width, height) = (crtc.width, crtc.height)
-        else:
-            (width, height) = (0, 0)
-        modes = {_find_mode(mode, res.modes) for mode in params.modes}
-        atoms = d.xrandr_list_output_properties(output).atoms
-        properties = {}
-        for atom in atoms:
-            propname = d.get_atom_name(atom)
-            propvalue = d.xrandr_get_output_property(output, atom,
-                                                     X.AnyPropertyType,
-                                                     0, 100, False, False)
-            propinfo = d.xrandr_query_output_property(output, atom)
-            properties[propname] = {"info": propinfo, "value": propvalue}
-        result.append({
-            'name': params.name,
-            'resolution': (width, height),
-            'available_resolutions': list(modes),
-            'properties': properties
-        })
-    return result
-
-
-def info2edid(info):
-    """extract EDID for given output info"""
-    identifiers = {}
-    try:
-        return bytes(info["properties"]["EDID"]["value"]._data["value"])
-    except Exception:
-        return None
-
-
-def edid2ident(edid):
-    """extract identifiers for given EDID"""
-    if edid is None:
-        return None
-    identifiers = []
-    for slot in ((54, 72), (72,90), (90,108), (108,126)):
-        desc = edid[slot[0]:slot[1]]
-        if desc[3] == 0xfc:
-            name = "Name:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
-            identifiers.append(name.replace(" ", "_"))
-        if desc[3] == 0xfe:
-            text = "Text:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
-            identifiers.append(text.replace(" ", "_"))
-    serial = struct.unpack("<I", edid[12:16])[0]
-    identifiers.append("Serial:%08x" % (serial))
-    identifiers.append("Md5:{}".format(hashlib.md5(edid).hexdigest()))
-    return identifiers
+from backend import xrandr, output_port_infos
+from edid import info2edid, edid2ident
+from config import postexec_all, defined_setups
 
 
 def output_matches(info, ident):
@@ -264,12 +63,6 @@ def filter_valid_setups(infs, setups):
     return valid
 
 
-def xrandr(*args):
-    cmd = "xrandr " + " ".join(args)
-    print("EXEC {}".format(cmd))
-    return os.system(cmd)
-
-
 def apply_all_off(infs):
     args = []
     for port in infs:
@@ -315,7 +108,7 @@ def apply_setup(infs, setup):
             if cfg["location"][1] == "previous":
                 cfg["location"] = (cfg["location"][0], previous_port)
             cfg["location"] = (cfg["location"][0],
-                                port4ident(infs, cfg["location"][1]))
+                               port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
                                                 s.get("location", None)))
@@ -410,7 +203,6 @@ def apply_setup(infs, setup):
     for cmd in setup.postexec:
         print("EXEC {}".format(cmd))
         os.system(cmd)
-
 
 
 if __name__ == "__main__":
