@@ -61,7 +61,7 @@ present_left = DESK(
         )
 
 central = DESK(
-        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left", primary=True),
+        OUT("Name:BenQ_LCD", rotate="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous"), rotate="left"),
         postexec=[]
@@ -80,4 +80,5 @@ defined_setups = OrderedDict([
         ("central",           central)])
 
 
-postexec_all = ["pgrep qtile && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
+postexec_all = ["ps aux|grep qtile|grep -v grep > /dev/null"
+                +" && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
