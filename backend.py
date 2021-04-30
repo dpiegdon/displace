@@ -4,6 +4,10 @@ from Xlib import X, display
 from Xlib.ext import randr
 
 
+# https://github.com/python-xlib/python-xlib
+# https://stackoverflow.com/questions/8705814/get-display-count-and-resolution-for-each-display-in-python-without-xrandr
+
+
 def _find_mode(id, modes):
     for mode in modes:
         if id == mode.id:
@@ -13,8 +17,8 @@ def _find_mode(id, modes):
 def output_port_infos():
     """get a dict with information on all output ports"""
     d = display.Display(os.environ.get("DISPLAY", ":0"))
-    screen_count = d.screen_count()
-    default_screen = d.get_default_screen()
+    # screen_count = d.screen_count()
+    # default_screen = d.get_default_screen()
     result = []
     screen = 0
     info = d.screen(screen)

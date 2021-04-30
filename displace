@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-# https://github.com/python-xlib/python-xlib
-# https://stackoverflow.com/questions/8705814/get-display-count-and-resolution-for-each-display-in-python-without-xrandr
-
 import argparse
 import os
 import time

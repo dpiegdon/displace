@@ -4,7 +4,6 @@ import hashlib
 
 def info2edid(info):
     """extract EDID for given output info"""
-    identifiers = {}
     try:
         return bytes(info["properties"]["EDID"]["value"]._data["value"])
     except Exception:
