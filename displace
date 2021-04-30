@@ -120,6 +120,13 @@ present_left = DESK(
         postexec = setdpi(highdpi_scale)
         )
 
+central = DESK(
+        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
+        OUT("Name:EA232WMi", location=("right-of", "previous"), rotate="left"),
+        postexec = []
+        )
+
 
 # order defines priority for --auto:
 defined_setups = OrderedDict([
@@ -129,7 +136,8 @@ defined_setups = OrderedDict([
         ("loscape",           lowdpi_landscape),
         ("portrait",          portrait),
         ("present_right",     present_right),
-        ("present_top",       present_top)])
+        ("present_top",       present_top),
+        ("central",           central)])
 
 
 postexec_all = ["pgrep qtile && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
