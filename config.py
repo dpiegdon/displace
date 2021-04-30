@@ -81,4 +81,4 @@ defined_setups = OrderedDict([
 
 
 postexec_all = ["ps aux|grep qtile|grep -v grep > /dev/null"
-                +" && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
+                + " && ~/.qtile/qtile/bin/qshell -c 'restart()'"]
