@@ -60,13 +60,13 @@ def filter_valid_setups(infs, setups):
     return valid
 
 
-def apply_all_off(infs):
+def apply_all_off(infs, dry=False):
     args = []
     for port in infs:
         args.append("--output")
         args.append(port["name"])
         args.append("--off")
-    xrandr(*args)
+    xrandr(*args, dry=dry)
 
 
 def max_area_mode(modes):
@@ -85,8 +85,8 @@ def max_width_mode(modes):
     return m
 
 
-def apply_setup(infs, setup):
-    apply_all_off(infs)
+def apply_setup(infs, setup, dry=False):
+    apply_all_off(infs, dry=dry)
     previous_port = None
     outputs = {}
 
@@ -190,16 +190,15 @@ def apply_setup(infs, setup):
         if cfg["primary"]:
             args += ["--primary"]
 
-        xrandr(*args)
+        xrandr(*args, dry=dry)
 
-    time.sleep(.5)
+    if not dry:
+        time.sleep(.5)
     # execute any registered postexec things
-    for cmd in postexec_all:
+    for cmd in postexec_all + setup.postexec:
         print("EXEC {}".format(cmd))
-        os.system(cmd)
-    for cmd in setup.postexec:
-        print("EXEC {}".format(cmd))
-        os.system(cmd)
+        if not dry:
+            os.system(cmd)
 
 
 if __name__ == "__main__":
@@ -209,6 +208,8 @@ if __name__ == "__main__":
                         help="try to pick a good choice")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="show additional diagnostic and info")
+    parser.add_argument("-d", "--dry", action="store_true",
+                        help="only show what would be executed")
     args = parser.parse_args()
     infs = output_port_infos()
     valid_setups = filter_valid_setups(infs, defined_setups)
@@ -234,6 +235,8 @@ if __name__ == "__main__":
         print("currently valid selections, in order of priority:")
         for s in valid_setups:
             print(" - {}".format(s))
+            if args.verbose:
+                print(defined_setups[s])
     else:
         if args.selection and args.auto:
             parser.error("cannot --auto and select")
@@ -249,7 +252,7 @@ if __name__ == "__main__":
         if selection not in valid_setups:
             parser.error("{} is currently not a valid setup".format(selection))
 
-        print("picking: {}".format(selection))
+        print("picked configuration: {}".format(selection))
         if args.verbose:
             print(defined_setups[selection])
-        apply_setup(infs, defined_setups[selection])
+        apply_setup(infs, defined_setups[selection], dry=args.dry)

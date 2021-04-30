@@ -50,7 +50,10 @@ def output_port_infos():
     return result
 
 
-def xrandr(*args):
+def xrandr(*args, dry=False):
     cmd = "xrandr " + " ".join(args)
     print("EXEC {}".format(cmd))
-    return os.system(cmd)
+    if not dry:
+        return os.system(cmd)
+    else:
+        return 0
