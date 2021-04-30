@@ -203,7 +203,7 @@ def apply_setup(infs, setup):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Display placer")
     parser.add_argument("selection", nargs='?')
     parser.add_argument("-a", "--auto", action="store_true",
                         help="try to pick a good choice")
