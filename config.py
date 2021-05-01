@@ -109,9 +109,4 @@ defined_setups = OrderedDict([
         ("central",           central),
         ])
 
-postexec_all = [
-                # Restart qtile so it reconfigures for new layout.
-                # Might be better to use a qtile hook in its configuration.
-                ("ps aux|grep qtile|grep -v grep > /dev/null"
-                 + " && ~/.qtile/qtile/bin/qshell -c 'restart()'")
-                ]
+postexec_all = []

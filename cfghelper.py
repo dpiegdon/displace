@@ -19,8 +19,8 @@ class DesktopSetup:
              + "\n\t".join(("{} -> {}".format(p, c)
                             for p, c in self.outputs.items())))
         if self.postexec:
-             r += ("\n     postexec:\n\t"
-                   + "\n\t".join(self.postexec))
+            r += ("\n     postexec:\n\t"
+                  + "\n\t".join(self.postexec))
 
         r += "\n     >"
         return r
