@@ -232,10 +232,9 @@ if __name__ == "__main__":
                       display=display if verbose else display[0]))
                 if verbose:
                     print("   has modes:")
-                    modes = sorted(inf["available_resolutions"],
-                                   key=lambda m: m[0]*m[1],
-                                   reverse=True)
-                    for (w, h) in modes:
+                    for (w, h) in sorted(inf["available_resolutions"],
+                                         key=lambda m: m[0]*m[1],
+                                         reverse=True):
                         print("     {}x{}".format(w, h))
             else:
                 print(" - {}".format(port))

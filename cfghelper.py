@@ -1,6 +1,3 @@
-from collections import OrderedDict
-
-
 class DesktopSetup:
     def __init__(self, *outputs, postexec=None):
         self.__outputs = outputs
@@ -69,7 +66,6 @@ class OutputSetup():
     def mode(self):
         return self.__mode if self.__mode else "max_area"
 
-
     def __validate(self):
         # FIXME kwargs may contain:
         #   location: any of:
@@ -93,7 +89,6 @@ class OutputSetup():
         # location=(x,y) or (direction,port,align)
         # FIXME: make explicit params with sane defaults?
         pass
-
 
     def __str__(self):
         o = "<Output '{}'".format(self.name)
