@@ -208,11 +208,15 @@ if __name__ == "__main__":
                         help="try to pick a good choice")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="show additional diagnostic and info")
+    parser.add_argument("-V", "--veryverbose", action="store_true",
+                        help="show all diagnostic and info")
     parser.add_argument("-d", "--dry", action="store_true",
                         help="only show what would be executed")
     args = parser.parse_args()
     infs = output_port_infos()
     valid_setups = filter_valid_setups(infs, defined_setups)
+    verbose = args.verbose or args.veryverbose
+    veryverbose = args.veryverbose
     if args.selection is None and not args.auto:
         print("available ports:")
         for (port, display) in get_outputs(infs):
@@ -224,8 +228,8 @@ if __name__ == "__main__":
                 print(" - {port}, {mode}, connected to {display}".format(
                       port=port,
                       mode=mode,
-                      display=display if args.verbose else display[0]))
-                if args.verbose:
+                      display=display if verbose else display[0]))
+                if verbose:
                     print("   has modes:")
                     for (w, h) in inf["available_resolutions"]:
                         print("     {}x{}".format(w, h))
@@ -235,8 +239,20 @@ if __name__ == "__main__":
         print("currently valid selections, in order of priority:")
         for s in valid_setups:
             print(" - {}".format(s))
-            if args.verbose:
-                print(defined_setups[s])
+            if verbose:
+                print("    {}".format(defined_setups[s]))
+        if args.veryverbose:
+            print()
+            print("currently invalid setups:")
+            for s in defined_setups:
+                if s not in valid_setups:
+                    print(" - {}".format(s))
+                    print("    {}".format(defined_setups[s]))
+            print()
+            if postexec_all:
+                print("global postexec:")
+                for p in postexec_all:
+                    print("\t{}".format(p))
     else:
         if args.selection and args.auto:
             parser.error("cannot --auto and select")
@@ -253,6 +269,6 @@ if __name__ == "__main__":
             parser.error("{} is currently not a valid setup".format(selection))
 
         print("picked configuration: {}".format(selection))
-        if args.verbose:
+        if verbose:
             print(defined_setups[selection])
         apply_setup(infs, defined_setups[selection], dry=args.dry)
