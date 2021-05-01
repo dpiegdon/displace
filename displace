@@ -93,13 +93,14 @@ def apply_setup(infs, setup, dry=False):
     # prepare and validate settings, rescale to 0x0
     for output in setup.outputs:
         inf = inf4ident(infs, output.name)
+
         cfg = {}
         cfg["port"] = port4ident(infs, output.name)
-        cfg["scale"] = output.get("scale", (1, 1))
-        cfg["rotate"] = output.get("rotate", "normal")
-        cfg["primary"] = output.get("primary", False)
+        cfg["scale"] = output.scale
+        cfg["rotate"] = output.rotation
+        cfg["primary"] = output.primary
 
-        cfg["location"] = output.get("location", (0, 0))
+        cfg["location"] = output.location
         if isinstance(cfg["location"][0], str):
             if cfg["location"][1] == "previous":
                 cfg["location"] = (cfg["location"][0], previous_port)
@@ -108,13 +109,14 @@ def apply_setup(infs, setup, dry=False):
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
                                                 output.get("location", None)))
-        cfg["mode"] = output.get("mode", "max_area")
+        cfg["mode"] = output.mode
         if cfg["mode"] == "max_area":
             cfg["mode"] = max_area_mode(inf["available_resolutions"])
         elif cfg["mode"] == "max_width":
             cfg["mode"] = max_width_mode(inf["available_resolutions"])
         elif not isinstance(cfg["mode"], tuple):
             raise TypeError("invalid mode '{}'".format(cfg["mode"]))
+
         outputs[cfg["port"]] = cfg
         previous_port = cfg["port"]
 

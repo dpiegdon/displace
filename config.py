@@ -34,7 +34,7 @@ def ATNA33TP06(primary=True, mode=highdpi_mode, **kwargs):
 
 
 dock_highdpi = DESK(
-        OUT("Name:BenQ_LCD", scale=highdpi_scale, rotate="left"),
+        OUT("Name:BenQ_LCD", scale=highdpi_scale, rotation="left"),
         OUT("Name:DELL_U2515H", scale=highdpi_scale,
             location=("right-of", "previous")),
         ATNA33TP06(location=("below", "previous")),
@@ -42,7 +42,7 @@ dock_highdpi = DESK(
         )
 
 dock_lowdpi = DESK(
-        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotate="left"),
+        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotation="left"),
         OUT("Name:DELL_U2515H", location=("right-of", "previous"),
             scale=lowdpi_scale),
         ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
@@ -60,7 +60,7 @@ landscape_lowdpi = DESK(
         )
 
 portrait_highdpi = DESK(
-        ATNA33TP06(rotate=True),
+        ATNA33TP06(rotation=True),
         postexec=setdpi(lowdpi_scale)
         )
 
@@ -86,9 +86,10 @@ present_right_highdpi = DESK(
 # == home desktop configurations ==============================================
 
 central = DESK(
-        OUT("Name:BenQ_LCD", rotate="left", primary=True),
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        OUT("Name:EA232WMi", location=("right-of", "previous"), rotate="left"),
+        OUT("Name:EA232WMi", location=("right-of", "previous"),
+            rotation="left"),
         postexec=[]
         )
 

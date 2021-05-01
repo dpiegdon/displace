@@ -33,11 +33,42 @@ class DesktopSetup:
         return r
 
 
-class OutputSetup(dict):
-    def __init__(self, name, *args, **kwargs):
+class OutputSetup():
+    def __init__(self, name, scale=None, location=None, rotation=None,
+                 primary=None, mode=None):
         self.__name = name
-        super().__init__(*args, **kwargs)
+        self.__scale = scale
+        self.__location = location
+        self.__rotation = rotation
+        self.__primary = primary
+        self.__mode = mode
         self.__validate()
+
+    @property
+    def name(self):
+        """Identifying name/string of output."""
+        return self.__name
+
+    @property
+    def scale(self):
+        return self.__scale if self.__scale else (1, 1)
+
+    @property
+    def rotation(self):
+        return self.__rotation if self.__rotation else "normal"
+
+    @property
+    def location(self):
+        return self.__location if self.__location else (0, 0)
+
+    @property
+    def primary(self):
+        return self.__primary if self.__primary else False
+
+    @property
+    def mode(self):
+        return self.__mode if self.__mode else "max_area"
+
 
     def __validate(self):
         # FIXME kwargs may contain:
@@ -63,7 +94,18 @@ class OutputSetup(dict):
         # FIXME: make explicit params with sane defaults?
         pass
 
-    @property
-    def name(self):
-        return self.__name
 
+    def __str__(self):
+        o = "<Output '{}'".format(self.name)
+        if self.__scale is not None:
+            o += " scale='{}'".format(self.__scale)
+        if self.__rotation is not None:
+            o += " rotation='{}'".format(self.__rotation)
+        if self.__location is not None:
+            o += " location='{}'".format(self.__location)
+        if self.__primary is not None:
+            o += " primary='{}'".format(self.__primary)
+        if self.__mode is not None:
+            o += " mode='{}'".format(self.__mode)
+        o += ">"
+        return o
