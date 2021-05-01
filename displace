@@ -53,7 +53,7 @@ def filter_valid_setups(infs, setups):
     valid = []
     for setup in setups:
         for output in setups[setup].outputs:
-            if inf4ident(infs, output) is None:
+            if inf4ident(infs, output.name) is None:
                 break
         else:
             valid.append(setup)
@@ -92,15 +92,14 @@ def apply_setup(infs, setup, dry=False):
 
     # prepare and validate settings, rescale to 0x0
     for output in setup.outputs:
-        inf = inf4ident(infs, output)
-        s = setup.outputs[output]
+        inf = inf4ident(infs, output.name)
         cfg = {}
-        cfg["port"] = port4ident(infs, output)
-        cfg["scale"] = s.get("scale", (1, 1))
-        cfg["rotate"] = s.get("rotate", "normal")
-        cfg["primary"] = s.get("primary", False)
+        cfg["port"] = port4ident(infs, output.name)
+        cfg["scale"] = output.get("scale", (1, 1))
+        cfg["rotate"] = output.get("rotate", "normal")
+        cfg["primary"] = output.get("primary", False)
 
-        cfg["location"] = s.get("location", (0, 0))
+        cfg["location"] = output.get("location", (0, 0))
         if isinstance(cfg["location"][0], str):
             if cfg["location"][1] == "previous":
                 cfg["location"] = (cfg["location"][0], previous_port)
@@ -108,8 +107,8 @@ def apply_setup(infs, setup, dry=False):
                                port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
-                                                s.get("location", None)))
-        cfg["mode"] = s.get("mode", "max_area")
+                                                output.get("location", None)))
+        cfg["mode"] = output.get("mode", "max_area")
         if cfg["mode"] == "max_area":
             cfg["mode"] = max_area_mode(inf["available_resolutions"])
         elif cfg["mode"] == "max_width":
