@@ -207,7 +207,10 @@ def res(w, h):
 
 def ratio16(w, h):
     """Aspect ratio of resolution, normalized to 16:x."""
-    return "16:" + str(round(16/w*h, 1)).replace(".0", "")
+    if w > h:
+        return "16:" + str(round(16/w*h, 1)).replace(".0", "")
+    else:
+        return str(round(16/h*w, 1)).replace(".0", "") + ":16"
 
 
 if __name__ == "__main__":
