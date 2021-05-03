@@ -6,6 +6,8 @@ import time
 
 from backend import xrandr, output_port_infos
 from edid import info2edid, edid2ident
+from cfghelper import DesktopSetup as DESK
+from cfghelper import OutputSetup as OUT
 from config import postexec_all, defined_setups
 
 
@@ -207,6 +209,7 @@ def res(w, h):
         return "off"
     return "{}x{}".format(w, h)
 
+
 def ratio16(w, h):
     """Aspect ratio of resolution, normalized to 16:x."""
     if w == 0 or h == 0:
@@ -222,6 +225,8 @@ if __name__ == "__main__":
     parser.add_argument("selection", nargs='?')
     parser.add_argument("-a", "--auto", action="store_true",
                         help="try to pick a good choice")
+    parser.add_argument("-f", "--fallback", action="store_true",
+                        help="add a screen-maxing fallback configuration")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="show additional diagnostic and info")
     parser.add_argument("-V", "--veryverbose", action="store_true",
@@ -229,10 +234,24 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dry", action="store_true",
                         help="only show what would be executed")
     args = parser.parse_args()
-    infs = output_port_infos()
-    valid_setups = filter_valid_setups(infs, defined_setups)
     verbose = args.verbose or args.veryverbose
     veryverbose = args.veryverbose
+
+    infs = output_port_infos()
+
+    if args.fallback:
+        valid_outputs = sorted([inf for inf in infs
+                                if len(inf["available_resolutions"]) > 0],
+                               key=lambda i: i["name"])
+        if len(valid_outputs) > 0:
+            fallback_outputs = [OUT(valid_outputs[0]["name"], primary=True)]
+            for out in valid_outputs[1:]:
+                fallback_outputs.append(OUT(out["name"],
+                                            location=("right-of", "previous")))
+            defined_setups["FALLBACK"] = DESK(*fallback_outputs, postexec=[])
+
+    valid_setups = filter_valid_setups(infs, defined_setups)
+
     if args.selection is None and not args.auto:
         print("available ports:")
         for (port, display) in get_outputs(infs):
