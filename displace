@@ -244,11 +244,11 @@ if __name__ == "__main__":
                                 if len(inf["available_resolutions"]) > 0],
                                key=lambda i: i["name"])
         if len(valid_outputs) > 0:
-            fallback_outputs = [OUT(valid_outputs[0]["name"], primary=True)]
-            for out in valid_outputs[1:]:
-                fallback_outputs.append(OUT(out["name"],
-                                            location=("right-of", "previous")))
-            defined_setups["FALLBACK"] = DESK(*fallback_outputs, postexec=[])
+            fb = DESK(OUT(valid_outputs[0]["name"], primary=True),
+                      *[OUT(out["name"], location=("right-of", "previous"))
+                        for out in valid_outputs[1:]],
+                      postexec=[])
+            defined_setups["FALLBACK"] = fb
 
     valid_setups = filter_valid_setups(infs, defined_setups)
 
