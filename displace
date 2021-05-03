@@ -203,10 +203,14 @@ def apply_setup(infs, setup, dry=False):
 
 
 def res(w, h):
+    if w == 0 or h == 0:
+        return "off"
     return "{}x{}".format(w, h)
 
 def ratio16(w, h):
     """Aspect ratio of resolution, normalized to 16:x."""
+    if w == 0 or h == 0:
+        return "off"
     if w > h:
         return "16:" + str(round(16/w*h, 1)).replace(".0", "")
     else:
@@ -235,8 +239,6 @@ if __name__ == "__main__":
             if display:
                 inf = inf4ident(infs, port, allow_disconnected=True)
                 mode = res(*inf["resolution"])
-                if mode == "0x0":
-                    mode = "off"
                 print(" - {port}, {mode} ({ratio}), ".format(
                               port=port,
                               ratio=ratio16(*inf["resolution"]),
