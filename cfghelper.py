@@ -20,8 +20,7 @@ class DesktopSetup:
 
     def __str__(self):
         r = ("<DesktopSetup outputs:\n\t"
-             + "\n\t".join(("{} -> {}".format(o.name, o)
-                            for o in self.outputs)))
+             + "\n\t".join(("{}".format(o) for o in self.outputs)))
         if self.postexec:
             r += ("\n     postexec:\n\t"
                   + "\n\t".join(self.postexec))
