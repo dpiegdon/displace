@@ -90,7 +90,13 @@ central = DESK(
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous"),
             rotation="left"),
-        postexec=[]
+        )
+
+# == work desktop configurations ==============================================
+
+workac = DESK(
+        OUT("Serial:30313138", rotation="left", primary=True),
+        OUT("Serial:30313034", location=("right-of", "previous")),
         )
 
 # =============================================================================
@@ -108,6 +114,8 @@ defined_setups = OrderedDict([
         ("present-right",     present_right_highdpi),
         # home desktop
         ("central",           central),
+        # work
+        ("workac",            workac),
         ])
 
 postexec_all = []
