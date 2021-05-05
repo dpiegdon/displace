@@ -95,8 +95,8 @@ central = DESK(
 # == work desktop configurations ==============================================
 
 workac = DESK(
-        OUT("Serial:30313138", rotation="left", primary=True),
-        OUT("Serial:30313034", location=("right-of", "previous")),
+        OUT("SerNr:30313138", rotation="left", primary=True),
+        OUT("SerNr:30313034", location=("right-of", "previous")),
         )
 
 # =============================================================================

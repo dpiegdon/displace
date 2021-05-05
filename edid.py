@@ -10,20 +10,27 @@ def info2edid(info):
         return None
 
 
+_edidDescriptorSlots = ((54, 72), (72, 90), (90, 108), (108, 126))
+_edidTextFields = {0xFC: "Name", 0xFE: "Text", 0xFF: "SerTxt"}
+
+
+def _textForField(x):
+    return x.decode("utf-8").split("\n")[0].rstrip().replace(" ", "_")
+
+
 def edid2ident(edid):
     """extract identifiers for given EDID"""
     if edid is None:
         return None
     identifiers = []
-    for slot in ((54, 72), (72, 90), (90, 108), (108, 126)):
+    for slot in _edidDescriptorSlots:
         desc = edid[slot[0]:slot[1]]
-        if desc[3] == 0xfc:
-            name = "Name:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
-            identifiers.append(name.replace(" ", "_"))
-        if desc[3] == 0xfe:
-            text = "Text:" + desc[5:].decode("utf-8").split("\n")[0].rstrip()
-            identifiers.append(text.replace(" ", "_"))
-    serial = struct.unpack("<I", edid[12:16])[0]
-    identifiers.append("Serial:%08x" % (serial))
+        if desc[3] in _edidTextFields:
+            identifiers.append("{}:{}".format(_edidTextFields[desc[3]],
+                                              _textForField(desc[5:])))
+    identifiers.append("SerNr:%08x" % (struct.unpack("<I", edid[12:16])[0]))
     identifiers.append("Md5:{}".format(hashlib.md5(edid).hexdigest()))
-    return identifiers
+
+    # sort such that 'Name' is always prioritized:
+    return sorted(identifiers,
+                  key=lambda x: "\0" if x.startswith("Name:") else x)
