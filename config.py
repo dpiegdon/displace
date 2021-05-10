@@ -19,6 +19,7 @@ def setdpi(scale):
             15 if scale[0] >= 1.5 else 10)
          + r"  ~/.Xdefaults"),
         (r"xrdb ~/.Xdefaults")
+        # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
         ]
 
 
