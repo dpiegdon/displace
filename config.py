@@ -61,7 +61,7 @@ landscape_lowdpi = DESK(
         )
 
 portrait_highdpi = DESK(
-        ATNA33TP06(rotation=True),
+        ATNA33TP06(rotation="left"),
         postexec=setdpi(lowdpi_scale)
         )
 
