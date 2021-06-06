@@ -16,7 +16,7 @@ def setdpi(scale):
             215 if scale[0] >= 1.5 else 120)
          + r"               ~/.Xdefaults"),
         (r"sed -i -e 's/^XTerm.faceSize:[ \t].*$/XTerm*faceSize: {}/'".format(
-            15 if scale[0] >= 1.5 else 10)
+            15 if scale[0] >= 1.5 else 8)
          + r"  ~/.Xdefaults"),
         (r"xrdb ~/.Xdefaults")
         # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
