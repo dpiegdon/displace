@@ -33,4 +33,16 @@ def edid2ident(edid):
 
     # sort such that 'Name' is always prioritized:
     return sorted(identifiers,
-                  key=lambda x: "\0" if x.startswith("Name:") else x)
+                  key=lambda x: "\0" if x.startswith("Name:") else
+                                "\1" if x.startswith("Text:") else x)
+
+
+def edid2size(edid):
+    """extract physical display size (width, height) in cm, or None"""
+    if edid is None:
+        return None
+    width = edid[21]
+    height = edid[22]
+    if 0 == width:
+        return None
+    return width, height

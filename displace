@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import argparse
+import math
 import os
 import time
 
 from backend import xrandr, output_port_infos
-from edid import info2edid, edid2ident
+from edid import info2edid, edid2ident, edid2size
 from cfghelper import DesktopSetup as DESK
 from cfghelper import OutputSetup as OUT
 from config import postexec_all, defined_setups
@@ -257,19 +258,35 @@ if __name__ == "__main__":
         for (port, display) in get_outputs(infs):
             if display:
                 inf = inf4ident(infs, port, allow_disconnected=True)
+                physsize = edid2size(info2edid(inf))
+                if physsize:
+                    widthcm, heightcm = physsize
+                    diagonalcm = math.sqrt(widthcm*widthcm+heightcm*heightcm)
+                    diagonalinch = diagonalcm/2.54
+                    diagonaltxt = '%.1f" ' % (diagonalinch)
+                else:
+                    diagonaltxt = ''
                 mode = res(*inf["resolution"])
                 print(" - {port}, {mode} ({ratio}), ".format(
                               port=port,
                               ratio=ratio16(*inf["resolution"]),
                               mode=mode,)
-                      + "connected to {display}".format(
+                      + "connected to {diagonaltxt}{display}".format(
+                              diagonaltxt=diagonaltxt,
                               display=display if verbose else display[0]))
                 if verbose:
                     print("   has modes and ratios:")
                     for (w, h) in sorted(inf["available_resolutions"],
                                          key=lambda m: m[0]*m[1],
                                          reverse=True):
-                        print("     %-10s  %s" % (res(w, h), ratio16(w, h)))
+                        if physsize:
+                            dpi = "{}dpi".format(int(math.sqrt(w*w+h*h)/
+                                                     diagonalinch))
+                        else:
+                            dpi = ""
+                        print("     %-10s  %-10s %-10s" % (res(w, h),
+                                                           ratio16(w, h),
+                                                           dpi))
             else:
                 print(" - {}".format(port))
         print()
