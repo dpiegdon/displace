@@ -221,6 +221,15 @@ def ratio16(w, h):
         return str(round(16/h*w, 1)).replace(".0", "") + ":16"
 
 
+def dpi(w, h, physsize):
+    """DPI of w/h resolution on given physical display size"""
+    if physsize:
+        return int(math.sqrt(w**2+h**2)/
+                   math.sqrt((physsize[0]/2.54)**2+(physsize[1]/2.54)**2))
+    else:
+        return 0
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Display placer")
     parser.add_argument("selection", nargs='?')
@@ -261,15 +270,20 @@ if __name__ == "__main__":
                 physsize = edid2size(info2edid(inf))
                 if physsize:
                     widthcm, heightcm = physsize
-                    diagonalcm = math.sqrt(widthcm*widthcm+heightcm*heightcm)
-                    diagonalinch = diagonalcm/2.54
-                    diagonaltxt = '%.1f" ' % (diagonalinch)
+                    diagonaltxt = '%.1f" ' % (math.sqrt(widthcm*widthcm+
+                                                        heightcm*heightcm)/2.54)
                 else:
                     diagonaltxt = ''
-                mode = res(*inf["resolution"])
-                print(" - {port}, {mode} ({ratio}), ".format(
+                w, h = inf["resolution"]
+                mode = res(w, h)
+                if physsize and w != 0 and h != 0:
+                    resinfo = " ({}, {}dpi)".format(
+                                ratio16(w, h), dpi(w, h, physsize))
+                else:
+                    resinfo = ""
+                print(" - {port}, {mode}{resinfo}, ".format(
                               port=port,
-                              ratio=ratio16(*inf["resolution"]),
+                              resinfo=resinfo,
                               mode=mode,)
                       + "connected to {diagonaltxt}{display}".format(
                               diagonaltxt=diagonaltxt,
@@ -280,13 +294,12 @@ if __name__ == "__main__":
                                          key=lambda m: m[0]*m[1],
                                          reverse=True):
                         if physsize:
-                            dpi = "{}dpi".format(int(math.sqrt(w*w+h*h)/
-                                                     diagonalinch))
+                            dpitxt = "{}dpi".format(dpi(w, h, physsize))
                         else:
-                            dpi = ""
+                            dpitxt = ""
                         print("     %-10s  %-10s %-10s" % (res(w, h),
                                                            ratio16(w, h),
-                                                           dpi))
+                                                           dpitxt))
             else:
                 print(" - {}".format(port))
         print()
