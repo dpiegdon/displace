@@ -22,6 +22,38 @@ def setdpi(scale):
         # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
         ]
 
+def xinput_set(device, prop, value, *extraargs):
+    return "xinput {args} set-prop '{device}' '{prop}' {value}".format(
+            args=" ".join(extraargs), device=device, prop=prop, value=value)
+
+def xinput_enable(device, on=True):
+    return xinput_set(device, "Device Enabled", 1 if on else 0)
+
+def xinput_map(device, screen):
+    return "xinput --map-to-output '{device}' '{screen}'".format(
+            device=device, screen=screen)
+
+def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
+    screen_touch = "Wacom Pen and multitouch sensor Finger touch"
+    screen_stylus = "Wacom Pen and multitouch sensor Pen stylus"
+    screen_pen = "Wacom Pen and multitouch sensor Pen eraser"
+    screendevs = [screen_touch, screen_stylus, screen_pen]
+    touchpad = "SynPS/2 Synaptics TouchPad"
+    trackpoint = "TPPS/2 ALPS TrackPoint"
+    portrait = rotation in ("left", "right")
+    landscape = rotation in ("normal", "inverted")
+    if not portrait and not landscape:
+        raise ValueError("invalid rotation: {}".format(rotation))
+
+    ret = [xinput_enable(trackpoint),
+           xinput_enable(touchpad, on=landscape),
+           xinput_set(screen_stylus, "Wacom Hover Click", 0)]
+
+    for dev in screendevs:
+        ret.append(xinput_map(dev, targetscreen))
+
+    return ret
+
 
 # == laptop configurations ====================================================
 
@@ -39,7 +71,7 @@ dock_highdpi = DESK(
         OUT("Name:DELL_U2515H", scale=highdpi_scale,
             location=("right-of", "previous")),
         ATNA33TP06(location=("below", "previous")),
-        postexec=setdpi(highdpi_scale)
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 dock_lowdpi = DESK(
@@ -47,41 +79,41 @@ dock_lowdpi = DESK(
         OUT("Name:DELL_U2515H", location=("right-of", "previous"),
             scale=lowdpi_scale),
         ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
-        postexec=setdpi(lowdpi_scale)
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 landscape_highdpi = DESK(
         ATNA33TP06(),
-        postexec=setdpi(highdpi_scale)
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 landscape_lowdpi = DESK(
         ATNA33TP06(mode=lowdpi_mode),
-        postexec=setdpi(lowdpi_scale)
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 portrait_highdpi = DESK(
         ATNA33TP06(rotation="left"),
-        postexec=setdpi(lowdpi_scale)
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("left")
         )
 
 present_left_highdpi = DESK(
         OUT("HDMI-1", scale=highdpi_scale),
         ATNA33TP06(location=("right-of", "HDMI-1")),
-        postexec=setdpi(highdpi_scale)
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 present_top_highdpi = DESK(
         OUT("HDMI-1", scale=highdpi_scale),
         ATNA33TP06(location=("below", "HDMI-1")),
-        postexec=setdpi(highdpi_scale)
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 present_right_highdpi = DESK(
         ATNA33TP06(),
         OUT("HDMI-1", scale=highdpi_scale,
             location=("right-of", "Text:ATNA33TP06-0")),
-        postexec=setdpi(highdpi_scale)
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 # == home desktop configurations ==============================================
