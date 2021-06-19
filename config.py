@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from cfghelper import DesktopSetup as DESK
 from cfghelper import OutputSetup as OUT
-
+from cfghelper import xinput_set, xinput_enable, xinput_map
 
 # scale 1:1 if using a low-dpi display in low-dpi context
 lowdpi_scale = (1, 1)
@@ -22,16 +22,6 @@ def setdpi(scale):
         # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
         ]
 
-def xinput_set(device, prop, value, *extraargs):
-    return "xinput {args} set-prop '{device}' '{prop}' {value}".format(
-            args=" ".join(extraargs), device=device, prop=prop, value=value)
-
-def xinput_enable(device, on=True):
-    return xinput_set(device, "Device Enabled", 1 if on else 0)
-
-def xinput_map(device, screen):
-    return "xinput --map-to-output '{device}' '{screen}'".format(
-            device=device, screen=screen)
 
 def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
     screen_touch = "Wacom Pen and multitouch sensor Finger touch"

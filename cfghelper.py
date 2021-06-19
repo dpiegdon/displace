@@ -1,4 +1,5 @@
 class DesktopSetup:
+    """ Datastructure defining screen setups for a whole desktop """
     def __init__(self, *outputs, postexec=None):
         self.__outputs = outputs
         self.__postexec = postexec if postexec else []
@@ -30,6 +31,7 @@ class DesktopSetup:
 
 
 class OutputSetup():
+    """ Datastructure defining setup of a single output == display """
     def __init__(self, name, scale=None, location=None, rotation=None,
                  primary=None, mode=None):
         self.__name = name
@@ -103,3 +105,20 @@ class OutputSetup():
             o += " mode='{}'".format(self.__mode)
         o += ">"
         return o
+
+
+def xinput_set(device, prop, value, *extraargs):
+    """ postexec manipulation of input device properties """
+    return "xinput {args} set-prop '{device}' '{prop}' {value}".format(
+            args=" ".join(extraargs), device=device, prop=prop, value=value)
+
+
+def xinput_map(device, screen):
+    """ postexec map input device to output screen """
+    return "xinput --map-to-output '{device}' '{screen}'".format(
+            device=device, screen=screen)
+
+
+def xinput_enable(device, on=True):
+    """ postexec en- or disabling of input device properties """
+    return xinput_set(device, "Device Enabled", 1 if on else 0)
