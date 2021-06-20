@@ -89,6 +89,16 @@ portrait_lowdpi = DESK(
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("left")
         )
 
+stand_highdpi = DESK(
+        ATNA33TP06(rotation="inverted"),
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("inverted")
+        )
+
+stand_lowdpi = DESK(
+        ATNA33TP06(mode=lowdpi_mode, rotation="inverted"),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("inverted")
+        )
+
 present_left_lowdpi = DESK(
         OUT("HDMI-1"),
         ATNA33TP06(mode=lowdpi_mode, location=("right-of", "HDMI-1")),
@@ -134,6 +144,8 @@ defined_setups = OrderedDict([
         ("landscape-highdpi", landscape_highdpi),
         ("portrait",          portrait_lowdpi),
         ("portrait-highdpi",  portrait_highdpi),
+        ("stand",             stand_lowdpi),
+        ("stand-highdpi",     stand_highdpi),
         ("present-left",      present_left_lowdpi),
         ("present-top",       present_top_lowdpi),
         ("present-right",     present_right_lowdpi),
