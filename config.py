@@ -11,16 +11,14 @@ highdpi_scale = (2, 2)
 
 
 def setdpi(scale):
-    return [
-        (r"sed -i -e 's/^Xft.dpi:[ \t].*$/Xft.dpi: {}/'".format(
-            215 if scale[0] >= 1.5 else 120)
-         + r"               ~/.Xdefaults"),
-        (r"sed -i -e 's/^XTerm.faceSize:[ \t].*$/XTerm*faceSize: {}/'".format(
-            15 if scale[0] >= 1.5 else 8)
-         + r"  ~/.Xdefaults"),
-        (r"xrdb ~/.Xdefaults")
-        # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
-        ]
+    xdefaults = {"Xft.dpi":        215 if scale[0] >= 1.5 else 120,
+                 "Xcursor.size":   48 if scale[0] >= 1.5 else 16,
+                 "XTerm.faceSize": 15 if scale[0] >= 1.5 else 8}
+    xdef = [r"sed -i -e 's/^{key}:[ \t].*$/{key}: {val}/' ~/.Xdefaults".format(
+                   key=key, val=val) for (key, val) in xdefaults.items()]
+    xdef.append(r"xrdb ~/.Xdefaults")
+    # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
+    return xdef
 
 
 def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
