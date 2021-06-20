@@ -63,9 +63,8 @@ dock_highdpi = DESK(
         )
 
 dock_lowdpi = DESK(
-        OUT("Name:BenQ_LCD", scale=lowdpi_scale, rotation="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous"),
-            scale=lowdpi_scale),
+        OUT("Name:BenQ_LCD", rotation="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
@@ -82,26 +81,30 @@ landscape_lowdpi = DESK(
 
 portrait_highdpi = DESK(
         ATNA33TP06(rotation="left"),
+        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("left")
+        )
+
+portrait_lowdpi = DESK(
+        ATNA33TP06(mode=lowdpi_mode, rotation="left"),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("left")
         )
 
-present_left_highdpi = DESK(
-        OUT("HDMI-1", scale=highdpi_scale),
-        ATNA33TP06(location=("right-of", "HDMI-1")),
-        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
+present_left_lowdpi = DESK(
+        OUT("HDMI-1"),
+        ATNA33TP06(mode=lowdpi_mode, location=("right-of", "HDMI-1")),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
-present_top_highdpi = DESK(
-        OUT("HDMI-1", scale=highdpi_scale),
-        ATNA33TP06(location=("below", "HDMI-1")),
-        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
+present_top_lowdpi = DESK(
+        OUT("HDMI-1"),
+        ATNA33TP06(mode=lowdpi_mode, location=("below", "HDMI-1")),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
-present_right_highdpi = DESK(
-        ATNA33TP06(),
-        OUT("HDMI-1", scale=highdpi_scale,
-            location=("right-of", "Text:ATNA33TP06-0")),
-        postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
+present_right_lowdpi = DESK(
+        ATNA33TP06(mode=lowdpi_mode),
+        OUT("HDMI-1", location=("right-of", "Text:ATNA33TP06-0")),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 # == home desktop configurations ==============================================
@@ -125,14 +128,15 @@ workac = DESK(
 # order defines priority for --auto:
 defined_setups = OrderedDict([
         # laptop
-        ("dock",              dock_highdpi),
-        ("dock-lowdpi",       dock_lowdpi),
-        ("landscape",         landscape_highdpi),
-        ("landscape-lowdpi",  landscape_lowdpi),
-        ("portrait",          portrait_highdpi),
-        ("present-left",      present_left_highdpi),
-        ("present-top",       present_top_highdpi),
-        ("present-right",     present_right_highdpi),
+        ("dock",              dock_lowdpi),
+        ("dock-hidpi",        dock_highdpi),
+        ("landscape",         landscape_lowdpi),
+        ("landscape-highdpi", landscape_highdpi),
+        ("portrait",          portrait_lowdpi),
+        ("portrait-highdpi",  portrait_highdpi),
+        ("present-left",      present_left_lowdpi),
+        ("present-top",       present_top_lowdpi),
+        ("present-right",     present_right_lowdpi),
         # home desktop
         ("central",           central),
         # work
