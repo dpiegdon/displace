@@ -22,7 +22,7 @@ def setdpi(scale):
 
 
 def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
-    screen_touch = "Wacom Pen and multitouch sensor Finger touch"
+    screen_touch = "Wacom Pen and multitouch sensor Finger"
     screen_stylus = "Wacom Pen and multitouch sensor Pen stylus"
     screen_pen = "Wacom Pen and multitouch sensor Pen eraser"
     screendevs = [screen_touch, screen_stylus, screen_pen]
