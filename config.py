@@ -11,14 +11,40 @@ highdpi_scale = (2, 2)
 
 
 def setdpi(scale):
-    xdefaults = {"Xft.dpi":        215 if scale[0] >= 1.5 else 120,
-                 "Xcursor.size":   48 if scale[0] >= 1.5 else 16,
-                 "XTerm.faceSize": 15 if scale[0] >= 1.5 else 8}
-    xdef = [r"sed -i -e 's/^{key}:[ \t].*$/{key}: {val}/' ~/.Xdefaults".format(
-                   key=key, val=val) for (key, val) in xdefaults.items()]
+    def sedi(srcfile, cmd):
+        return "sed -i -e '{cmd}' {srcfile}".format(srcfile=srcfile, cmd=cmd)
+
+    xdef_map = {r"Xft\.dpi":        215 if scale[0] >= 1.5 else 120,
+                r"Xcursor\.size":    48 if scale[0] >= 1.5 else 16,
+                r"XTerm\*faceSize":  15 if scale[0] >= 1.5 else 8}
+    xdef = [sedi(srcfile="~/.Xdefaults",
+                 cmd=r"s/^{k}:[ \t].*$/{k}: {v}/".format(k=k, v=v))
+            for (k, v) in xdef_map.items()]
     xdef.append(r"xrdb ~/.Xdefaults")
+
+    gdkqt_map = {"GDK_SCALE":         2 if scale[0] >= 1.5 else 1,
+                 "GDK_DPI_SCALE":   0.5 if scale[0] >= 1.5 else 1}
+
+    gdkqt = [sedi(srcfile="~/.environment.local",
+                  cmd=r"s/^export {k}=.*$/export {k}={v}/".format(k=k, v=v))
+             for (k, v) in gdkqt_map.items()]
+    gdkqt.append("gsettings set org.gnome.settings-daemon.plugins.xsettings "
+                 + "overrides \"[{'Gdk/WindowScalingFactor', <"
+                 + ("2" if scale[0] >= 1.5 else "1")
+                 + ">}]\"")
+    gdkqt.append("gsettings set org.gnome.desktop.interface scaling-factor "
+                 + "{scale}".format(scale=2 if scale[0] >= 1.5 else 1))
+    gdkqt.append("gsettings set org.gnome.settings-daemon.plugins.xsettings "
+                 + "overrides \"{'Xft/DPI': <"
+                 + ("215" if scale[0] >= 1.5 else "120")
+                 + "00"
+                 + ">}\"")
+    gdkqt.append("gsettings set org.gnome.desktop.interface "
+                 + "text-scaling-factor "
+                 + ("2" if scale[0] >= 1.5 else "1"))
+
     # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
-    return xdef
+    return xdef + gdkqt
 
 
 def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
