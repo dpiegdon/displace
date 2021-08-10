@@ -1,5 +1,6 @@
 import struct
 import hashlib
+import binascii
 
 
 def info2edid(info):
@@ -15,7 +16,12 @@ _edidTextFields = {0xFC: "Name", 0xFE: "Text", 0xFF: "SerTxt"}
 
 
 def _textForField(x):
-    return x.decode("utf-8").split("\n")[0].rstrip().replace(" ", "_")
+    for encoding in ("utf-8", "ascii"):
+        try:
+            return x.decode(encoding).split("\n")[0].rstrip().replace(" ", "_")
+        except UnicodeDecodeError:
+            pass
+    return binascii.hexlify(x).decode("ascii")
 
 
 def edid2ident(edid):
