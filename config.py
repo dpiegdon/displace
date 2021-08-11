@@ -154,10 +154,29 @@ central = DESK(
 
 # == work desktop configurations ==============================================
 
-workac = DESK(
-        OUT("SerNr:30313138", rotation="left", primary=True),
-        OUT("SerNr:30313034", location=("right-of", "previous")),
+sg_dock_wk = DESK(
+        OUT("Text:3036564736814231333348414e", primary=True),
+        OUT("Name:DELL_U3219Q", location=("right-of", "previous")),
         )
+
+sg_dock_home = DESK(
+        OUT("Name:BenQ_LCD", rotation="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
+        OUT("Text:3036564736814231333348414e", primary=True,
+            location=("below", "previous"), mode=lowdpi_mode),
+        )
+
+sg_dock_home_lg = DESK(
+        OUT("Name:BenQ_LCD", rotation="left"),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
+        OUT("Text:3036564736814231333348414e", primary=True,
+            location=("below", "previous"), mode=lowdpi_mode),
+        OUT("Name:EA232WMi", location=("right-of", "Name:DELL_U2515H"),
+            rotation="left"),
+        )
+
+sg = DESK(
+        OUT("Text:3036564736814231333348414e", primary=True))
 
 # =============================================================================
 
@@ -175,10 +194,13 @@ defined_setups = OrderedDict([
         ("present-left",      present_left_lowdpi),
         ("present-top",       present_top_lowdpi),
         ("present-right",     present_right_lowdpi),
+        # work
+        ("sg_dock_home_lg",   sg_dock_home_lg),
+        ("sg_dock_home",      sg_dock_home),
+        ("sg_dock_wk",        sg_dock_wk),
+        ("sg",                sg),
         # home desktop
         ("central",           central),
-        # work
-        ("workac",            workac),
         ])
 
 postexec_all = []
