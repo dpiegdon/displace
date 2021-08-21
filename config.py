@@ -145,9 +145,16 @@ present_right_lowdpi = DESK(
 
 # == home desktop configurations ==============================================
 
-central = DESK(
+centralA = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
+        OUT("Name:EA232WMi", location=("right-of", "previous"),
+            rotation="left"),
+        )
+
+centralB = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
+        OUT("Name:RX-V685", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous"),
             rotation="left"),
         )
@@ -200,7 +207,8 @@ defined_setups = OrderedDict([
         ("sg_dock_wk",        sg_dock_wk),
         ("sg",                sg),
         # home desktop
-        ("central",           central),
+        ("centralA",          centralA),
+        ("centralB",          centralB),
         ])
 
 postexec_all = []
