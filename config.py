@@ -95,6 +95,11 @@ dock_lowdpi = DESK(
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
+dock_work = DESK(
+        OUT("Name:DELL_U3219Q"),
+        ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
+        )
+
 landscape_highdpi = DESK(
         ATNA33TP06(),
         postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
@@ -175,6 +180,7 @@ defined_setups = OrderedDict([
         ("present-left",      present_left_lowdpi),
         ("present-top",       present_top_lowdpi),
         ("present-right",     present_right_lowdpi),
+        ("dock-work",         dock_work),
         # home desktop
         ("central",           central),
         # work

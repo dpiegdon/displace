@@ -111,7 +111,7 @@ def apply_setup(infs, setup, dry=False):
                                port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
-                                                output.get("location", None)))
+                                                cfg["location"]))
         cfg["mode"] = output.mode
         if cfg["mode"] == "max_area":
             cfg["mode"] = max_area_mode(inf["available_resolutions"])

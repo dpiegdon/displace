@@ -31,44 +31,32 @@ class DesktopSetup:
 
 
 class OutputSetup():
+    __valid_rotations={"normal", "left", "right", "inverted"}
     """ Datastructure defining setup of a single output == display """
     def __init__(self, name, scale=None, location=None, rotation=None,
                  primary=None, mode=None):
         self.__name = name
-        self.__scale = scale
-        self.__location = location
-        self.__rotation = rotation
-        self.__primary = primary
-        self.__mode = mode
-        self.__validate()
 
-    @property
-    def name(self):
-        """Identifying name/string of output."""
-        return self.__name
+        self.__scale = (1, 1) if scale is None else scale
+        if not isinstance(self.__scale, tuple):
+            raise ValueError("scale must be None or a tuple of two ints")
 
-    @property
-    def scale(self):
-        return self.__scale if self.__scale else (1, 1)
+        self.__location = (0, 0) if location is None else location
+        if not isinstance(self.__location, tuple):
+            raise ValueError("location must be None, a tuple of two ints "
+                            +"or a tuple of two strings")
 
-    @property
-    def rotation(self):
-        return self.__rotation if self.__rotation else "normal"
+        self.__rotation = "normal" if rotation is None else rotation
+        if self.__rotation not in self.__valid_rotations:
+            raise ValueError("rotation must be None or one of {}.".format(
+                                self.__valid_rotations))
 
-    @property
-    def location(self):
-        return self.__location if self.__location else (0, 0)
+        self.__primary = False if primary is None else primary
+        if self.__primary not in {True, False}:
+            raise ValueError("primary must be None or a boolean value")
 
-    @property
-    def primary(self):
-        return self.__primary if self.__primary else False
+        self.__mode = "max_area" if mode is None else mode
 
-    @property
-    def mode(self):
-        return self.__mode if self.__mode else "max_area"
-
-    def __validate(self):
-        # FIXME kwargs may contain:
         #   location: any of:
         #           tuple (x,y)               e.g. (0, 0)
         #           tuple (direction, port)   e.g. ("left-of", "Text:BenQ_LCD")
@@ -89,7 +77,31 @@ class OutputSetup():
         # FIXME:
         # location=(x,y) or (direction,port,align)
         # FIXME: make explicit params with sane defaults?
-        pass
+
+    @property
+    def name(self):
+        """Identifying name/string of output."""
+        return self.__name
+
+    @property
+    def scale(self):
+        return self.__scale
+
+    @property
+    def rotation(self):
+        return self.__rotation
+
+    @property
+    def location(self):
+        return self.__location
+
+    @property
+    def primary(self):
+        return self.__primary
+
+    @property
+    def mode(self):
+        return self.__mode
 
     def __str__(self):
         o = "<Output '{}'".format(self.name)
