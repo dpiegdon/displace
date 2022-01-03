@@ -167,8 +167,10 @@ centralB = DESK(
 # == work desktop configurations ==============================================
 
 sg_dock_wk = DESK(
-        OUT("Text:3036564736814231333348414e", primary=True),
-        OUT("Name:DELL_U3219Q", location=("right-of", "previous")),
+        OUT("SerTxt:7FNLV83", mode=(2560, 1440), rotation="left", primary=True),
+        OUT("SerTxt:4H9N413", mode=(2560, 1440), location=("right-of", "previous")),
+        OUT("Text:3036564736814231333348414e", primary=True,
+            location=("below", "previous")),
         )
 
 sg_dock_home = DESK(
