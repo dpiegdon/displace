@@ -259,6 +259,11 @@ if __name__ == "__main__":
                         for out in valid_outputs[1:]],
                       postexec=[])
             defined_setups["FALLBACK"] = fb
+            fbr = DESK(OUT(valid_outputs[-1]["name"], primary=True),
+                      *[OUT(out["name"], location=("right-of", "previous"))
+                        for out in valid_outputs[:-1]],
+                      postexec=[])
+            defined_setups["FALLBACKR"] = fbr
 
     valid_setups = filter_valid_setups(infs, defined_setups)
 
