@@ -95,11 +95,6 @@ dock_lowdpi = DESK(
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
-dock_work = DESK(
-        OUT("Name:DELL_U3219Q"),
-        ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
-        )
-
 landscape_highdpi = DESK(
         ATNA33TP06(),
         postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
@@ -120,12 +115,12 @@ portrait_lowdpi = DESK(
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("left")
         )
 
-stand_highdpi = DESK(
+inverted_highdpi = DESK(
         ATNA33TP06(rotation="inverted"),
         postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("inverted")
         )
 
-stand_lowdpi = DESK(
+inverted_lowdpi = DESK(
         ATNA33TP06(mode=lowdpi_mode, rotation="inverted"),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("inverted")
         )
@@ -150,47 +145,23 @@ present_right_lowdpi = DESK(
 
 # == home desktop configurations ==============================================
 
-centralA = DESK(
+homeA = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous"),
             rotation="left"),
         )
 
-centralB = DESK(
+homeB = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:RX-V685", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous"),
             rotation="left"),
         )
 
-# == work desktop configurations ==============================================
-
-sg_dock_wk = DESK(
-        OUT("SerTxt:7FNLV83", mode=(2560, 1440), rotation="left", primary=True),
-        OUT("SerTxt:4H9N413", mode=(2560, 1440), location=("right-of", "previous")),
-        OUT("Text:3036564736814231333348414e", primary=True,
-            location=("below", "previous")),
+homeLEFT = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
         )
-
-sg_dock_home = DESK(
-        OUT("Name:BenQ_LCD", rotation="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        OUT("Text:3036564736814231333348414e", primary=True,
-            location=("below", "previous"), mode=lowdpi_mode),
-        )
-
-sg_dock_home_lg = DESK(
-        OUT("Name:BenQ_LCD", rotation="left"),
-        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        OUT("Text:3036564736814231333348414e", primary=True,
-            location=("below", "previous"), mode=lowdpi_mode),
-        OUT("Name:EA232WMi", location=("right-of", "Name:DELL_U2515H"),
-            rotation="left"),
-        )
-
-sg = DESK(
-        OUT("Text:3036564736814231333348414e", primary=True))
 
 # =============================================================================
 
@@ -198,25 +169,20 @@ sg = DESK(
 defined_setups = OrderedDict([
         # laptop
         ("dock",              dock_lowdpi),
-        ("dock-hidpi",        dock_highdpi),
+        ("dock-highdpi",      dock_highdpi),
         ("landscape",         landscape_lowdpi),
         ("landscape-highdpi", landscape_highdpi),
         ("portrait",          portrait_lowdpi),
         ("portrait-highdpi",  portrait_highdpi),
-        ("stand",             stand_lowdpi),
-        ("stand-highdpi",     stand_highdpi),
+        ("inverted",          inverted_lowdpi),
+        ("inverted-highdpi",  inverted_highdpi),
         ("present-left",      present_left_lowdpi),
         ("present-top",       present_top_lowdpi),
         ("present-right",     present_right_lowdpi),
-        ("dock-work",         dock_work),
-        # work
-        ("sg_dock_home_lg",   sg_dock_home_lg),
-        ("sg_dock_home",      sg_dock_home),
-        ("sg_dock_wk",        sg_dock_wk),
-        ("sg",                sg),
         # home desktop
-        ("centralA",          centralA),
-        ("centralB",          centralB),
+        ("homeA",             homeA),
+        ("homeB",             homeB),
+        ("homeLEFT",          homeLEFT),
         ])
 
 postexec_all = []
