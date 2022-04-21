@@ -86,15 +86,13 @@ def _apply_setup(infs, setup, dry=False):
     outputs = collections.OrderedDict()
 
     # disable all output ports that are unused
-    used_ports = [output.name for output in setup.outputs]
-    print("used: {}".format(used_ports))
+    used_ports = [_port4ident(infs, output.name) for output in setup.outputs]
     for port in infs:
         if port["name"] not in used_ports:
             outputs[port["name"]] = None
 
     # prepare and validate settings, rescale to 0x0
     for output in setup.outputs:
-        print(setup)
         inf = _inf4ident(infs, output.name)
 
         cfg = {}
