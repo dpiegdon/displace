@@ -1,4 +1,5 @@
 import os
+import time
 
 from Xlib import X, display
 from Xlib.ext import randr
@@ -50,10 +51,39 @@ def output_port_infos():
     return result
 
 
-def xrandr(*args, dry=False):
-    cmd = "xrandr " + " ".join(args)
+def apply_config(output_configs, postexecs, dry=False):
+    """given a dict of portname->config create and apply it. <config> may be
+    None to disable given port, or a dict with specific parameters."""
+
+    # map configuration to xrandr-parameters
+    xrandr_args = []
+    for (port, cfg) in output_configs.items():
+        if cfg is None:
+            xrandr_args += ["--output", port, "--off"]
+        else:
+            xrandr_args += ["--output", port,
+                            "--scale", "{}x{}".format(*cfg["scale"]),
+                            "--rotate", cfg["rotate"],
+                            "--pos", "{}x{}".format(cfg["location"][0],
+                                                    cfg["location"][1]),
+                            "--mode", "{}x{}".format(cfg["mode"][0],
+                                                     cfg["mode"][1]),
+                            ]
+            if cfg["primary"]:
+                xrandr_args += ["--primary"]
+
+    # apply generated config
+    cmd = "xrandr " + " ".join(xrandr_args)
     print("EXEC {}".format(cmd))
     if not dry:
         return os.system(cmd)
     else:
         return 0
+
+    # execute any registered postexec things
+    if not dry:
+        time.sleep(.5)
+    for cmd in postexecs:
+        print("EXEC {}".format(cmd))
+        if not dry:
+            os.system(cmd)

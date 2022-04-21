@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
 import argparse
+import collections
 import math
 import os
-import time
 
-from backend import xrandr, output_port_infos
+from backend import apply_config, output_port_infos
 from edid import info2edid, edid2ident, edid2size
 from cfghelper import DesktopSetup as DESK
 from cfghelper import OutputSetup as OUT
@@ -63,15 +63,6 @@ def _filter_valid_setups(infs, setups):
     return valid
 
 
-def _apply_all_off(infs, dry=False):
-    args = []
-    for port in infs:
-        args.append("--output")
-        args.append(port["name"])
-        args.append("--off")
-    xrandr(*args, dry=dry)
-
-
 def _max_area_mode(modes):
     m = (0, 0)
     for mode in modes:
@@ -89,12 +80,21 @@ def _max_width_mode(modes):
 
 
 def _apply_setup(infs, setup, dry=False):
-    _apply_all_off(infs, dry=dry)
     previous_port = None
-    outputs = {}
+
+    # keep order, otherwise some window manangers may get confused:
+    outputs = collections.OrderedDict()
+
+    # disable all output ports that are unused
+    used_ports = [output.name for output in setup.outputs]
+    print("used: {}".format(used_ports))
+    for port in infs:
+        if port["name"] not in used_ports:
+            outputs[port["name"]] = None
 
     # prepare and validate settings, rescale to 0x0
     for output in setup.outputs:
+        print(setup)
         inf = _inf4ident(infs, output.name)
 
         cfg = {}
@@ -129,7 +129,7 @@ def _apply_setup(infs, setup, dry=False):
         unresolved = False
         changed = False
         for (output, cfg) in outputs.items():
-            if isinstance(cfg["location"][0], str):
+            if cfg is not None and isinstance(cfg["location"][0], str):
                 other = outputs[cfg["location"][1]]
                 if isinstance(other["location"][0], str):
                     unresolved = True
@@ -168,41 +168,19 @@ def _apply_setup(infs, setup, dry=False):
 
         if unresolved and not changed:
             print(outputs)
-            raise ValueError("unable to resolve relative positioning:")
+            raise ValueError("unable to resolve relative positioning")
 
     # normalize to (0, 0)
-    offset_x = min((cfg["location"][0] for cfg in outputs.values()))
-    offset_y = min((cfg["location"][1] for cfg in outputs.values()))
+    offset_x = min((cfg["location"][0] for cfg in outputs.values()
+                    if cfg is not None))
+    offset_y = min((cfg["location"][1] for cfg in outputs.values()
+                    if cfg is not None))
     for (port, cfg) in outputs.items():
-        cfg["location"] = (cfg["location"][0] - offset_x,
-                           cfg["location"][1] - offset_y)
+        if cfg is not None:
+            cfg["location"] = (cfg["location"][0] - offset_x,
+                               cfg["location"][1] - offset_y)
 
-    # identify framebuffer size
-    # FIXME? seems to be optional.
-
-    # actually configure displays
-    for (port, cfg) in outputs.items():
-        args = ["--output", cfg["port"],
-                "--scale", "{}x{}".format(*cfg["scale"]),
-                "--rotate", cfg["rotate"],
-                "--pos", "{}x{}".format(cfg["location"][0],
-                                        cfg["location"][1]),
-                "--mode", "{}x{}".format(cfg["mode"][0],
-                                         cfg["mode"][1]),
-                ]
-
-        if cfg["primary"]:
-            args += ["--primary"]
-
-        xrandr(*args, dry=dry)
-
-    if not dry:
-        time.sleep(.5)
-    # execute any registered postexec things
-    for cmd in postexec_all + setup.postexec:
-        print("EXEC {}".format(cmd))
-        if not dry:
-            os.system(cmd)
+    apply_config(outputs, postexec_all + setup.postexec, dry=dry)
 
 
 def _res(w, h):
