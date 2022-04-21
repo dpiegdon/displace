@@ -1,3 +1,2 @@
 #!/bin/sh
-pyflakes3 *.py
-pycodestyle *.py
+python3 -m flake8

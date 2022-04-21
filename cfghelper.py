@@ -31,7 +31,7 @@ class DesktopSetup:
 
 
 class OutputSetup():
-    __valid_rotations={"normal", "left", "right", "inverted"}
+    __valid_rotations = {"normal", "left", "right", "inverted"}
     """ Datastructure defining setup of a single output == display """
     def __init__(self, name, scale=None, location=None, rotation=None,
                  primary=None, mode=None):
@@ -44,7 +44,7 @@ class OutputSetup():
         self.__location = (0, 0) if location is None else location
         if not isinstance(self.__location, tuple):
             raise ValueError("location must be None, a tuple of two ints "
-                            +"or a tuple of two strings")
+                             + "or a tuple of two strings")
 
         self.__rotation = "normal" if rotation is None else rotation
         if self.__rotation not in self.__valid_rotations:
