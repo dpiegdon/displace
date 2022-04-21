@@ -12,7 +12,7 @@ from cfghelper import OutputSetup as OUT
 from config import postexec_all, defined_setups
 
 
-def output_matches(info, ident):
+def _output_matches(info, ident):
     """does the specified info match the given identifiers?"""
     known = edid2ident(info2edid(info))
     if known is None:
@@ -23,12 +23,12 @@ def output_matches(info, ident):
     return len(intersect) > 0
 
 
-def get_outputs(infs):
+def _get_outputs(infs):
     """return a description of all available outputs with connected monitors"""
     return [(port["name"], edid2ident(info2edid(port))) for port in infs]
 
 
-def inf4ident(infs, ident, allow_disconnected=False):
+def _inf4ident(infs, ident, allow_disconnected=False):
     """retrieve port name for given identifier.
 
     unless @allow_disconnected, only ports with a connection are searched.
@@ -37,33 +37,33 @@ def inf4ident(infs, ident, allow_disconnected=False):
         if ident == port["name"]:
             if allow_disconnected or port["available_resolutions"]:
                 return port
-        if output_matches(port, ident):
+        if _output_matches(port, ident):
             if allow_disconnected or port["available_resolutions"]:
                 return port
     return None
 
 
-def port4ident(infs, ident, allow_disconnected=False):
+def _port4ident(infs, ident, allow_disconnected=False):
     """retrieve port name for given identifier.
 
     unless @allow_disconnected, only ports with a connection are searched.
     """
-    i = inf4ident(infs, ident, allow_disconnected)
+    i = _inf4ident(infs, ident, allow_disconnected)
     return i["name"] if i is not None else None
 
 
-def filter_valid_setups(infs, setups):
+def _filter_valid_setups(infs, setups):
     valid = []
     for setup in setups:
         for output in setups[setup].outputs:
-            if inf4ident(infs, output.name) is None:
+            if _inf4ident(infs, output.name) is None:
                 break
         else:
             valid.append(setup)
     return valid
 
 
-def apply_all_off(infs, dry=False):
+def _apply_all_off(infs, dry=False):
     args = []
     for port in infs:
         args.append("--output")
@@ -72,7 +72,7 @@ def apply_all_off(infs, dry=False):
     xrandr(*args, dry=dry)
 
 
-def max_area_mode(modes):
+def _max_area_mode(modes):
     m = (0, 0)
     for mode in modes:
         if mode[0]*mode[1] > m[0]*m[1]:
@@ -80,7 +80,7 @@ def max_area_mode(modes):
     return m
 
 
-def max_width_mode(modes):
+def _max_width_mode(modes):
     m = (0, 0)
     for mode in modes:
         if mode[0] > m[0] or mode[0] == m[0] and mode[1] > m[1]:
@@ -88,17 +88,17 @@ def max_width_mode(modes):
     return m
 
 
-def apply_setup(infs, setup, dry=False):
-    apply_all_off(infs, dry=dry)
+def _apply_setup(infs, setup, dry=False):
+    _apply_all_off(infs, dry=dry)
     previous_port = None
     outputs = {}
 
     # prepare and validate settings, rescale to 0x0
     for output in setup.outputs:
-        inf = inf4ident(infs, output.name)
+        inf = _inf4ident(infs, output.name)
 
         cfg = {}
-        cfg["port"] = port4ident(infs, output.name)
+        cfg["port"] = _port4ident(infs, output.name)
         cfg["scale"] = output.scale
         cfg["rotate"] = output.rotation
         cfg["primary"] = output.primary
@@ -108,15 +108,15 @@ def apply_setup(infs, setup, dry=False):
             if cfg["location"][1] == "previous":
                 cfg["location"] = (cfg["location"][0], previous_port)
             cfg["location"] = (cfg["location"][0],
-                               port4ident(infs, cfg["location"][1]))
+                               _port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
                 raise TypeError("invalid location '{}'".format(
                                                 cfg["location"]))
         cfg["mode"] = output.mode
         if cfg["mode"] == "max_area":
-            cfg["mode"] = max_area_mode(inf["available_resolutions"])
+            cfg["mode"] = _max_area_mode(inf["available_resolutions"])
         elif cfg["mode"] == "max_width":
-            cfg["mode"] = max_width_mode(inf["available_resolutions"])
+            cfg["mode"] = _max_width_mode(inf["available_resolutions"])
         elif not isinstance(cfg["mode"], tuple):
             raise TypeError("invalid mode '{}'".format(cfg["mode"]))
 
@@ -205,13 +205,13 @@ def apply_setup(infs, setup, dry=False):
             os.system(cmd)
 
 
-def res(w, h):
+def _res(w, h):
     if w == 0 or h == 0:
         return "off"
     return "{}x{}".format(w, h)
 
 
-def ratio16(w, h):
+def _ratio16(w, h):
     """Aspect ratio of resolution, normalized to 16:x."""
     if w == 0 or h == 0:
         return "off"
@@ -221,7 +221,7 @@ def ratio16(w, h):
         return str(round(16/h*w, 1)).replace(".0", "") + ":16"
 
 
-def dpi(w, h, physsize):
+def _dpi(w, h, physsize):
     """DPI of w/h resolution on given physical display size"""
     if physsize:
         return int(math.sqrt(w**2+h**2)/
@@ -265,13 +265,13 @@ if __name__ == "__main__":
                       postexec=[])
             defined_setups["FALLBACKR"] = fbr
 
-    valid_setups = filter_valid_setups(infs, defined_setups)
+    valid_setups = _filter_valid_setups(infs, defined_setups)
 
     if args.selection is None and not args.auto:
         print("available ports:")
-        for (port, display) in get_outputs(infs):
+        for (port, display) in _get_outputs(infs):
             if display:
-                inf = inf4ident(infs, port, allow_disconnected=True)
+                inf = _inf4ident(infs, port, allow_disconnected=True)
                 physsize = edid2size(info2edid(inf))
                 if physsize:
                     widthcm, heightcm = physsize
@@ -280,10 +280,10 @@ if __name__ == "__main__":
                 else:
                     diagonaltxt = ''
                 w, h = inf["resolution"]
-                mode = res(w, h)
+                mode = _res(w, h)
                 if physsize and w != 0 and h != 0:
                     resinfo = " ({}, {}dpi)".format(
-                                ratio16(w, h), dpi(w, h, physsize))
+                                _ratio16(w, h), _dpi(w, h, physsize))
                 else:
                     resinfo = ""
                 print(" - {port}, {mode}{resinfo}, ".format(
@@ -299,11 +299,11 @@ if __name__ == "__main__":
                                          key=lambda m: m[0]*m[1],
                                          reverse=True):
                         if physsize:
-                            dpitxt = "{}dpi".format(dpi(w, h, physsize))
+                            dpitxt = "{}dpi".format(_dpi(w, h, physsize))
                         else:
                             dpitxt = ""
-                        print("     %-10s  %-10s %-10s" % (res(w, h),
-                                                           ratio16(w, h),
+                        print("     %-10s  %-10s %-10s" % (_res(w, h),
+                                                           _ratio16(w, h),
                                                            dpitxt))
             else:
                 print(" - {}".format(port))
@@ -331,7 +331,7 @@ if __name__ == "__main__":
 
         selection = args.selection
         if args.auto:
-            valid_setups = filter_valid_setups(infs, defined_setups)
+            valid_setups = _filter_valid_setups(infs, defined_setups)
             if valid_setups:
                 selection = valid_setups[0]
 
@@ -343,4 +343,4 @@ if __name__ == "__main__":
         print("picked configuration: {}".format(selection))
         if verbose:
             print(defined_setups[selection])
-        apply_setup(infs, defined_setups[selection], dry=args.dry)
+        _apply_setup(infs, defined_setups[selection], dry=args.dry)
