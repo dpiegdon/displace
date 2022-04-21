@@ -57,20 +57,23 @@ def apply_config(output_configs, postexecs, dry=False):
 
     # map configuration to xrandr-parameters
     xrandr_args = []
+    crtc = 0
     for (port, cfg) in output_configs.items():
+        xrandr_args += [" ", "--output", port]
         if cfg is None:
-            xrandr_args += ["--output", port, "--off"]
+            xrandr_args += ["--off"]
         else:
-            xrandr_args += ["--output", port,
+            if cfg["primary"]:
+                xrandr_args += ["--primary"]
+            xrandr_args += ["--crtc", "{}".format(crtc),
+                            "--mode", "{}x{}".format(cfg["mode"][0],
+                                                     cfg["mode"][1]),
                             "--scale", "{}x{}".format(*cfg["scale"]),
                             "--rotate", cfg["rotate"],
                             "--pos", "{}x{}".format(cfg["location"][0],
                                                     cfg["location"][1]),
-                            "--mode", "{}x{}".format(cfg["mode"][0],
-                                                     cfg["mode"][1]),
                             ]
-            if cfg["primary"]:
-                xrandr_args += ["--primary"]
+            crtc += 1
 
     # apply generated config
     cmd = "xrandr " + " ".join(xrandr_args)
