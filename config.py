@@ -11,8 +11,10 @@ highdpi_scale = (2, 2)
 
 
 def setdpi(scale):
+    """ generate a list of postexecs to fix DPI attributes for all relevant
+    applications """
     def sedi(srcfile, cmd):
-        return "sed -i -e '{cmd}' {srcfile}".format(srcfile=srcfile, cmd=cmd)
+        return f"sed -i -e '{cmd}' {srcfile}"
 
     xdef_map = {r"Xft\.dpi":        215 if scale[0] >= 1.5 else 120,
                 r"Xcursor\.size":    48 if scale[0] >= 1.5 else 16,
@@ -48,6 +50,7 @@ def setdpi(scale):
 
 
 def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
+    """ generate a list of postexecs to configure all input devices """
     screen_touch = "Wacom Pen and multitouch sensor Finger"
     screen_stylus = "Wacom Pen and multitouch sensor Pen stylus"
     screen_pen = "Wacom Pen and multitouch sensor Pen eraser"
@@ -57,10 +60,10 @@ def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
     portrait = rotation in ("left", "right")
     landscape = rotation in ("normal", "inverted")
     if not portrait and not landscape:
-        raise ValueError("invalid rotation: {}".format(rotation))
+        raise ValueError(f"invalid rotation: {rotation}")
 
     ret = [xinput_enable(trackpoint),
-           xinput_enable(touchpad, on=landscape),
+           xinput_enable(touchpad, enable=landscape),
            xinput_set(screen_stylus, "Wacom Hover Click", 0)]
 
     for dev in screendevs:
@@ -71,11 +74,11 @@ def laptop_setup_input_devices(rotation, targetscreen="eDP-1"):
 
 # == laptop configurations ====================================================
 
-lowdpi_mode = (1920, 1080)
-highdpi_mode = "max_area"
+LOWDPI_MODE = (1920, 1080)
+HIGHDPI_MODE = "max_area"
 
 
-def ATNA33TP06(primary=True, mode=highdpi_mode, **kwargs):
+def ATNA33TP06(primary=True, mode=HIGHDPI_MODE, **kwargs):
     """laptop main display"""
     return OUT("Text:ATNA33TP06-0", primary=primary, mode=mode, **kwargs)
 
@@ -91,7 +94,7 @@ dock_highdpi = DESK(
 dock_lowdpi = DESK(
         OUT("Name:BenQ_LCD", rotation="left"),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        ATNA33TP06(location=("below", "previous"), mode=lowdpi_mode),
+        ATNA33TP06(location=("below", "previous"), mode=LOWDPI_MODE),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
@@ -101,7 +104,7 @@ landscape_highdpi = DESK(
         )
 
 landscape_lowdpi = DESK(
-        ATNA33TP06(mode=lowdpi_mode),
+        ATNA33TP06(mode=LOWDPI_MODE),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
@@ -111,7 +114,7 @@ portrait_highdpi = DESK(
         )
 
 portrait_lowdpi = DESK(
-        ATNA33TP06(mode=lowdpi_mode, rotation="left"),
+        ATNA33TP06(mode=LOWDPI_MODE, rotation="left"),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("left")
         )
 
@@ -121,24 +124,24 @@ inverted_highdpi = DESK(
         )
 
 inverted_lowdpi = DESK(
-        ATNA33TP06(mode=lowdpi_mode, rotation="inverted"),
+        ATNA33TP06(mode=LOWDPI_MODE, rotation="inverted"),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("inverted")
         )
 
 present_left_lowdpi = DESK(
         OUT("HDMI-1"),
-        ATNA33TP06(mode=lowdpi_mode, location=("right-of", "HDMI-1")),
+        ATNA33TP06(mode=LOWDPI_MODE, location=("right-of", "HDMI-1")),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 present_top_lowdpi = DESK(
         OUT("HDMI-1"),
-        ATNA33TP06(mode=lowdpi_mode, location=("below", "HDMI-1")),
+        ATNA33TP06(mode=LOWDPI_MODE, location=("below", "HDMI-1")),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 present_right_lowdpi = DESK(
-        ATNA33TP06(mode=lowdpi_mode),
+        ATNA33TP06(mode=LOWDPI_MODE),
         OUT("HDMI-1", location=("right-of", "Text:ATNA33TP06-0")),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
@@ -163,6 +166,12 @@ homeLEFT = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         )
 
+homeOUT = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
+        OUT("Name:EA232WMi", location=("right-of", "previous"),
+            rotation="left"),
+        )
+
 # =============================================================================
 
 # order defines priority for --auto:
@@ -183,6 +192,7 @@ defined_setups = OrderedDict([
         ("homeA",             homeA),
         ("homeB",             homeB),
         ("homeLEFT",          homeLEFT),
+        ("homeOUT",           homeOUT),
         ])
 
 postexec_all = []

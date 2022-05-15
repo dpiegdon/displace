@@ -7,7 +7,7 @@ def info2edid(info):
     """extract EDID for given output info"""
     try:
         return bytes(info["properties"]["EDID"]["value"]._data["value"])
-    except Exception:
+    except (IndexError, ValueError, KeyError):
         return None
 
 
@@ -15,13 +15,14 @@ _edidDescriptorSlots = ((54, 72), (72, 90), (90, 108), (108, 126))
 _edidTextFields = {0xFC: "Name", 0xFE: "Text", 0xFF: "SerTxt"}
 
 
-def _textForField(x):
+def _text_for_field(field):
     for encoding in ("utf-8", "ascii"):
         try:
-            return x.decode(encoding).split("\n")[0].rstrip().replace(" ", "_")
+            decoded = field.decode(encoding)
+            return decoded.split("\n")[0].rstrip().replace(" ", "_")
         except UnicodeDecodeError:
             pass
-    return binascii.hexlify(x).decode("ascii")
+    return binascii.hexlify(field).decode("ascii")
 
 
 def edid2ident(edid):
@@ -33,7 +34,7 @@ def edid2ident(edid):
         desc = edid[slot[0]:slot[1]]
         if desc[3] in _edidTextFields:
             identifiers.append("{}:{}".format(_edidTextFields[desc[3]],
-                                              _textForField(desc[5:])))
+                                              _text_for_field(desc[5:])))
     identifiers.append("SerNr:%08x" % (struct.unpack("<I", edid[12:16])[0]))
     identifiers.append("Md5:{}".format(hashlib.md5(edid).hexdigest()))
 

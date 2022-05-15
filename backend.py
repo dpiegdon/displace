@@ -9,38 +9,39 @@ from Xlib.ext import randr
 # https://stackoverflow.com/questions/8705814/get-display-count-and-resolution-for-each-display-in-python-without-xrandr
 
 
-def _find_mode(id, modes):
+def _find_mode(ident, modes):
+    """ select mode with given @ident (.id) from @modes """
     for mode in modes:
-        if id == mode.id:
+        if ident == mode.id:
             return (mode.width, mode.height)
+    raise ValueError(f"No mode with id {ident}")
 
 
 def output_port_infos():
     """get a dict with information on all output ports"""
-    d = display.Display(os.environ.get("DISPLAY", ":0"))
-    # screen_count = d.screen_count()
-    # default_screen = d.get_default_screen()
+    disp = display.Display(os.environ.get("DISPLAY", ":0"))
+    # screen_count = disp.screen_count()
+    # default_screen = disp.get_default_screen()
     result = []
-    screen = 0
-    info = d.screen(screen)
+    info = disp.screen(sno=None)
     window = info.root
     res = randr.get_screen_resources(window)
     for output in res.outputs:
-        params = d.xrandr_get_output_info(output, res.config_timestamp)
+        params = disp.xrandr_get_output_info(output, res.config_timestamp)
         if params.crtc:
-            crtc = d.xrandr_get_crtc_info(params.crtc, res.config_timestamp)
+            crtc = disp.xrandr_get_crtc_info(params.crtc, res.config_timestamp)
             (width, height) = (crtc.width, crtc.height)
         else:
             (width, height) = (0, 0)
         modes = {_find_mode(mode, res.modes) for mode in params.modes}
-        atoms = d.xrandr_list_output_properties(output).atoms
+        atoms = disp.xrandr_list_output_properties(output).atoms
         properties = {}
         for atom in atoms:
-            propname = d.get_atom_name(atom)
-            propvalue = d.xrandr_get_output_property(output, atom,
-                                                     X.AnyPropertyType,
-                                                     0, 100, False, False)
-            propinfo = d.xrandr_query_output_property(output, atom)
+            propname = disp.get_atom_name(atom)
+            propvalue = disp.xrandr_get_output_property(output, atom,
+                                                        X.AnyPropertyType,
+                                                        0, 100, False, False)
+            propinfo = disp.xrandr_query_output_property(output, atom)
             properties[propname] = {"info": propinfo, "value": propvalue}
         result.append({
             'name': params.name,
@@ -65,7 +66,7 @@ def apply_config(output_configs, postexecs, dry=False):
         else:
             if cfg["primary"]:
                 xrandr_args += ["--primary"]
-            xrandr_args += ["--crtc", "{}".format(crtc),
+            xrandr_args += ["--crtc", f"{crtc}",
                             "--mode", "{}x{}".format(cfg["mode"][0],
                                                      cfg["mode"][1]),
                             "--scale", "{}x{}".format(*cfg["scale"]),
@@ -79,9 +80,9 @@ def apply_config(output_configs, postexecs, dry=False):
     cmd = "xrandr " + " ".join(xrandr_args)
     print("EXEC {}".format(cmd))
     if not dry:
-        return os.system(cmd)
-    else:
-        return 0
+        ret = os.system(cmd)
+        if ret != 0:
+            return ret
 
     # execute any registered postexec things
     if not dry:
@@ -89,4 +90,7 @@ def apply_config(output_configs, postexecs, dry=False):
     for cmd in postexecs:
         print("EXEC {}".format(cmd))
         if not dry:
-            os.system(cmd)
+            ret = os.system(cmd)
+            if ret != 0:
+                return ret
+    return 0

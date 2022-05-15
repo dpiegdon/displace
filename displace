@@ -3,7 +3,7 @@
 import argparse
 import collections
 import math
-import os
+import sys
 
 from backend import apply_config, output_port_infos
 from edid import info2edid, edid2ident, edid2size
@@ -64,19 +64,19 @@ def _filter_valid_setups(infs, setups):
 
 
 def _max_area_mode(modes):
-    m = (0, 0)
+    ret = (0, 0)
     for mode in modes:
-        if mode[0]*mode[1] > m[0]*m[1]:
-            m = mode
-    return m
+        if mode[0]*mode[1] > ret[0]*ret[1]:
+            ret = mode
+    return ret
 
 
 def _max_width_mode(modes):
-    m = (0, 0)
+    ret = (0, 0)
     for mode in modes:
-        if mode[0] > m[0] or mode[0] == m[0] and mode[1] > m[1]:
-            m = mode
-    return m
+        if mode[0] > ret[0] or mode[0] == ret[0] and mode[1] > ret[1]:
+            ret = mode
+    return ret
 
 
 def _apply_setup(infs, setup, dry=False):
@@ -193,8 +193,7 @@ def _ratio16(w, h):
         return "off"
     if w > h:
         return "16:" + str(round(16/w*h, 1)).replace(".0", "")
-    else:
-        return str(round(16/h*w, 1)).replace(".0", "") + ":16"
+    return str(round(16/h*w, 1)).replace(".0", "") + ":16"
 
 
 def _dpi(w, h, physsize):
@@ -202,11 +201,10 @@ def _dpi(w, h, physsize):
     if physsize:
         return int(math.sqrt(w**2+h**2)/
                    math.sqrt((physsize[0]/2.54)**2+(physsize[1]/2.54)**2))
-    else:
-        return 0
+    return 0
 
 
-if __name__ == "__main__":
+def _main(argv):
     parser = argparse.ArgumentParser(description="Display placer")
     parser.add_argument("selection", nargs='?')
     parser.add_argument("-a", "--auto", action="store_true",
@@ -219,9 +217,8 @@ if __name__ == "__main__":
                         help="show all diagnostic and info")
     parser.add_argument("-d", "--dry", action="store_true",
                         help="only show what would be executed")
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv)
     verbose = args.verbose or args.veryverbose
-    veryverbose = args.veryverbose
 
     infs = output_port_infos()
 
@@ -320,3 +317,7 @@ if __name__ == "__main__":
         if verbose:
             print(defined_setups[selection])
         _apply_setup(infs, defined_setups[selection], dry=args.dry)
+
+
+if __name__ == "__main__":
+    _main(sys.argv[1:])

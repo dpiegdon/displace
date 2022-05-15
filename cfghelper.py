@@ -6,28 +6,30 @@ class DesktopSetup:
 
     @property
     def outputs(self):
+        """ returns all outputs """
         return self.__outputs
 
     def output(self, name):
-        for o in self.__outputs:
-            if o.name == name:
-                return o
-            else:
-                return ValueError("Unknown output '{}'".format(o))
+        """ returns specified output """
+        for outp in self.__outputs:
+            if outp.name == name:
+                return outp
+        raise ValueError(f"Unknown output '{name}'")
 
     @property
     def postexec(self):
+        """ returns all registered postexecs """
         return self.__postexec
 
     def __str__(self):
-        r = ("<DesktopSetup outputs:\n\t"
-             + "\n\t".join(("{}".format(o) for o in self.outputs)))
+        setup = ("<DesktopSetup outputs:\n\t"
+                 + "\n\t".join((f"{outp}" for outp in self.outputs)))
         if self.postexec:
-            r += ("\n     postexec:\n\t"
-                  + "\n\t".join(self.postexec))
+            setup += ("\n     postexec:\n\t"
+                      + "\n\t".join(self.postexec))
 
-        r += "\n     >"
-        return r
+        setup += "\n     >"
+        return setup
 
 
 class OutputSetup():
@@ -48,8 +50,8 @@ class OutputSetup():
 
         self.__rotation = "normal" if rotation is None else rotation
         if self.__rotation not in self.__valid_rotations:
-            raise ValueError("rotation must be None or one of {}.".format(
-                                self.__valid_rotations))
+            raise ValueError("rotation must be None or one of "
+                             + f"{self.__valid_rotations}.")
 
         self.__primary = False if primary is None else primary
         if self.__primary not in {True, False}:
@@ -85,52 +87,56 @@ class OutputSetup():
 
     @property
     def scale(self):
+        """ return scale property """
         return self.__scale
 
     @property
     def rotation(self):
+        """ return rotation property """
         return self.__rotation
 
     @property
     def location(self):
+        """ return location property """
         return self.__location
 
     @property
     def primary(self):
+        """ return primary property """
         return self.__primary
 
     @property
     def mode(self):
+        """ return mode property """
         return self.__mode
 
     def __str__(self):
-        o = "<Output '{}'".format(self.name)
+        outp = f"<Output '{self.name}'"
         if self.__scale is not None:
-            o += " scale='{}'".format(self.__scale)
+            outp += f" scale='{self.__scale}'"
         if self.__rotation is not None:
-            o += " rotation='{}'".format(self.__rotation)
+            outp += f" rotation='{self.__rotation}'"
         if self.__location is not None:
-            o += " location='{}'".format(self.__location)
+            outp += f" location='{self.__location}'"
         if self.__primary is not None:
-            o += " primary='{}'".format(self.__primary)
+            outp += f" primary='{self.__primary}'"
         if self.__mode is not None:
-            o += " mode='{}'".format(self.__mode)
-        o += ">"
-        return o
+            outp += f" mode='{self.__mode}'"
+        outp += ">"
+        return outp
 
 
 def xinput_set(device, prop, value, *extraargs):
     """ postexec manipulation of input device properties """
-    return "xinput {args} set-prop '{device}' '{prop}' {value}".format(
-            args=" ".join(extraargs), device=device, prop=prop, value=value)
+    args = " ".join(extraargs)
+    return f"xinput {args} set-prop '{device}' '{prop}' {value}"
 
 
 def xinput_map(device, screen):
     """ postexec map input device to output screen """
-    return "xinput --map-to-output '{device}' '{screen}'".format(
-            device=device, screen=screen)
+    return f"xinput --map-to-output '{device}' '{screen}'"
 
 
-def xinput_enable(device, on=True):
+def xinput_enable(device, enable=True):
     """ postexec en- or disabling of input device properties """
-    return xinput_set(device, "Device Enabled", 1 if on else 0)
+    return xinput_set(device, "Device Enabled", 1 if enable else 0)
