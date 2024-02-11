@@ -178,6 +178,20 @@ homeOUT = DESK(
             rotation="left"),
         )
 
+# == random virtual machine setups ============================================
+
+virtual_2k = DESK(
+        OUT("Virtual-0", mode=(2560, 1440), primary=True),
+        )
+
+virtual_1080p = DESK(
+        OUT("Virtual-0", mode=(1920, 1080), primary=True),
+        )
+
+virtual_720p = DESK(
+        OUT("Virtual-0", mode=(1280, 720), primary=True),
+        )
+
 # =============================================================================
 
 # order defines priority for --auto:
@@ -200,6 +214,10 @@ defined_setups = OrderedDict([
         ("homeB",             homeB),
         ("homeLEFT",          homeLEFT),
         ("homeOUT",           homeOUT),
+        # virtual machines
+        ("virtual_2k",        virtual_2k),
+        ("virtual_1080p",     virtual_1080p),
+        ("virtual_720p",      virtual_720p),
         ])
 
 postexec_all = []
