@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import argparse
 import collections
 import math
 import sys
@@ -10,6 +9,7 @@ from edid import info2edid, edid2ident, edid2size
 from cfghelper import DesktopSetup as DESK
 from cfghelper import OutputSetup as OUT
 from config import postexec_all, defined_setups
+from arguments import parse_arguments
 
 
 def _output_matches(info, ident):
@@ -204,22 +204,9 @@ def _dpi(w, h, physsize):
     return 0
 
 
-def _main(argv):
-    parser = argparse.ArgumentParser(description="Display placer")
-    parser.add_argument("selection", nargs='?')
-    parser.add_argument("-a", "--auto", action="store_true",
-                        help="try to pick a good choice")
-    parser.add_argument("-f", "--fallback", action="store_true",
-                        help="add a screen-maxing fallback configuration")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="show additional diagnostic and info")
-    parser.add_argument("-V", "--veryverbose", action="store_true",
-                        help="show all diagnostic and info")
-    parser.add_argument("-d", "--dry", action="store_true",
-                        help="only show what would be executed")
-    args = parser.parse_args(args=argv)
-    verbose = args.verbose or args.veryverbose
 
+def _main(argv):
+    args, v = parse_arguments(argv)
     infs = output_port_infos()
 
     if args.fallback:
@@ -259,14 +246,10 @@ def _main(argv):
                                 _ratio16(w, h), _dpi(w, h, physsize))
                 else:
                     resinfo = ""
-                print(" - {port}, {mode}{resinfo}, ".format(
-                              port=port,
-                              resinfo=resinfo,
-                              mode=mode,)
-                      + "connected to {diagonaltxt}{display}".format(
-                              diagonaltxt=diagonaltxt,
-                              display=display if verbose else display[0]))
-                if verbose:
+                print(f" - {port}, {mode}{resinfo}, "
+                      f"connected to {diagonaltxt}"
+                      + (str(display) if v.full_display_ident else display[0]))
+                if v.all_display_modes:
                     print("   has modes and ratios:")
                     for (w, h) in sorted(inf["available_resolutions"],
                                          key=lambda m: m[0]*m[1],
@@ -284,11 +267,11 @@ def _main(argv):
         print("currently valid selections, in order of priority:")
         for s in valid_setups:
             print(" - {}".format(s))
-            if verbose:
+            if v.available_full_config:
                 print("    {}".format(defined_setups[s]))
-        if args.veryverbose:
+        if v.setups_unavailable:
             print()
-            print("currently invalid setups:")
+            print("currently unavailable setups:")
             for s in defined_setups:
                 if s not in valid_setups:
                     print(" - {}".format(s))
@@ -314,7 +297,7 @@ def _main(argv):
             parser.error("{} is currently not a valid setup".format(selection))
 
         print("picked configuration: {}".format(selection))
-        if verbose:
+        if v.picked_full_config:
             print(defined_setups[selection])
         _apply_setup(infs, defined_setups[selection], dry=args.dry)
 
