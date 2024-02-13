@@ -67,18 +67,22 @@ def apply_config(output_configs, postexecs, dry=False):
             if cfg["primary"]:
                 xrandr_args += ["--primary"]
             xrandr_args += ["--crtc", f"{crtc}",
-                            "--mode", "{}x{}".format(cfg["mode"][0],
-                                                     cfg["mode"][1]),
-                            "--scale", "{}x{}".format(*cfg["scale"]),
+                            "--mode", (f"{cfg['mode'][0]}"
+                                       "x"
+                                       f"{cfg['mode'][1]}"),
+                            "--scale", (f"{cfg['scale'][0]}"
+                                        "x"
+                                        f"{cfg['scale'][1]}"),
                             "--rotate", cfg["rotate"],
-                            "--pos", "{}x{}".format(cfg["location"][0],
-                                                    cfg["location"][1]),
+                            "--pos", (f"{cfg['location'][0]}"
+                                      "x"
+                                      f"{cfg['location'][1]}"),
                             ]
             crtc += 1
 
     # apply generated config
     cmd = "xrandr " + " ".join(xrandr_args)
-    print("EXEC {}".format(cmd))
+    print(f"EXEC {cmd}")
     if not dry:
         ret = os.system(cmd)
         if ret != 0:
@@ -88,7 +92,7 @@ def apply_config(output_configs, postexecs, dry=False):
     if not dry:
         time.sleep(.5)
     for cmd in postexecs:
-        print("EXEC {}".format(cmd))
+        print(f"EXEC {cmd}")
         if not dry:
             ret = os.system(cmd)
             if ret != 0:

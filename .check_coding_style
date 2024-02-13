@@ -1,3 +1,4 @@
 #!/bin/sh
-python3 -m flake8
-pylint *.py displace
+pyflakes3         *.py displace
+python3 -m flake8 *.py displace
+pylint            *.py displace

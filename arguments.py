@@ -36,4 +36,4 @@ def parse_arguments(argv):
                         help="only show what would be executed")
     args = parser.parse_args(args=argv)
 
-    return args, VerbositySelection(args.verbose)
+    return parser, args, VerbositySelection(args.verbose)

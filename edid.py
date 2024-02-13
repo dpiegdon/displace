@@ -33,10 +33,10 @@ def edid2ident(edid):
     for slot in _edidDescriptorSlots:
         desc = edid[slot[0]:slot[1]]
         if desc[3] in _edidTextFields:
-            identifiers.append("{}:{}".format(_edidTextFields[desc[3]],
-                                              _text_for_field(desc[5:])))
+            identifiers.append(f"{_edidTextFields[desc[3]]}"
+                               f":{_text_for_field(desc[5:])}")
     identifiers.append("SerNr:%08x" % (struct.unpack("<I", edid[12:16])[0]))
-    identifiers.append("Md5:{}".format(hashlib.md5(edid).hexdigest()))
+    identifiers.append(f"Md5:{hashlib.md5(edid).hexdigest()}")
 
     # sort such that 'Name' is always prioritized:
     return sorted(identifiers,

@@ -108,15 +108,14 @@ def _apply_setup(infs, setup, dry=False):
             cfg["location"] = (cfg["location"][0],
                                _port4ident(infs, cfg["location"][1]))
             if cfg["location"][1] is None:
-                raise TypeError("invalid location '{}'".format(
-                                                cfg["location"]))
+                raise TypeError(f"invalid location '{cfg['location']}'")
         cfg["mode"] = output.mode
         if cfg["mode"] == "max_area":
             cfg["mode"] = _max_area_mode(inf["available_resolutions"])
         elif cfg["mode"] == "max_width":
             cfg["mode"] = _max_width_mode(inf["available_resolutions"])
         elif not isinstance(cfg["mode"], tuple):
-            raise TypeError("invalid mode '{}'".format(cfg["mode"]))
+            raise TypeError(f"invalid mode '{cfg['mode']}'")
 
         outputs[cfg["port"]] = cfg
         previous_port = cfg["port"]
@@ -159,8 +158,8 @@ def _apply_setup(infs, setup, dry=False):
                         x = ox
                         y = oy + oh
                     else:
-                        raise ValueError("unknown relative location {}".format(
-                                         cfg["location"]))
+                        raise ValueError("unknown relative location "
+                                         f"{cfg['location']}")
                     cfg["location"] = (x, y)
                     changed = True
 
@@ -184,7 +183,7 @@ def _apply_setup(infs, setup, dry=False):
 def _res(w, h):
     if w == 0 or h == 0:
         return "off"
-    return "{}x{}".format(w, h)
+    return f"{w}x{h}"
 
 
 def _ratio16(w, h):
@@ -199,14 +198,13 @@ def _ratio16(w, h):
 def _dpi(w, h, physsize):
     """DPI of w/h resolution on given physical display size"""
     if physsize:
-        return int(math.sqrt(w**2+h**2)/
-                   math.sqrt((physsize[0]/2.54)**2+(physsize[1]/2.54)**2))
+        return int(math.sqrt(w**2 + h**2) / math.sqrt((physsize[0]/2.54)**2
+                                                      + (physsize[1]/2.54)**2))
     return 0
 
 
-
 def _main(argv):
-    args, v = parse_arguments(argv)
+    parser, args, v = parse_arguments(argv)
     infs = output_port_infos()
 
     if args.fallback:
@@ -220,9 +218,9 @@ def _main(argv):
                       postexec=[])
             defined_setups["FALLBACK"] = fb
             fbr = DESK(OUT(valid_outputs[-1]["name"], primary=True),
-                      *[OUT(out["name"], location=("right-of", "previous"))
-                        for out in valid_outputs[:-1]],
-                      postexec=[])
+                       *[OUT(out["name"], location=("right-of", "previous"))
+                         for out in valid_outputs[:-1]],
+                       postexec=[])
             defined_setups["FALLBACKR"] = fbr
 
     valid_setups = _filter_valid_setups(infs, defined_setups)
@@ -235,15 +233,15 @@ def _main(argv):
                 physsize = edid2size(info2edid(inf))
                 if physsize:
                     widthcm, heightcm = physsize
-                    diagonaltxt = '%.1f" ' % (math.sqrt(widthcm*widthcm+
-                                                        heightcm*heightcm)/2.54)
+                    diagonaltxt = '%.1f" ' % (math.sqrt(widthcm*widthcm +
+                                                        heightcm*heightcm)
+                                              / 2.54)
                 else:
                     diagonaltxt = ''
                 w, h = inf["resolution"]
                 mode = _res(w, h)
                 if physsize and w != 0 and h != 0:
-                    resinfo = " ({}, {}dpi)".format(
-                                _ratio16(w, h), _dpi(w, h, physsize))
+                    resinfo = f" ({_ratio16(w, h)}, {_dpi(w, h, physsize)}dpi)"
                 else:
                     resinfo = ""
                 print(f" - {port}, {mode}{resinfo}, "
@@ -255,32 +253,32 @@ def _main(argv):
                                          key=lambda m: m[0]*m[1],
                                          reverse=True):
                         if physsize:
-                            dpitxt = "{}dpi".format(_dpi(w, h, physsize))
+                            dpitxt = f"{_dpi(w, h, physsize)}dpi"
                         else:
                             dpitxt = ""
                         print("     %-10s  %-10s %-10s" % (_res(w, h),
                                                            _ratio16(w, h),
                                                            dpitxt))
             else:
-                print(" - {}".format(port))
+                print(f" - {port}")
         print()
         print("currently valid selections, in order of priority:")
         for s in valid_setups:
-            print(" - {}".format(s))
+            print(f" - {s}")
             if v.available_full_config:
-                print("    {}".format(defined_setups[s]))
+                print(f"    {defined_setups[s]}")
         if v.setups_unavailable:
             print()
             print("currently unavailable setups:")
             for s in defined_setups:
                 if s not in valid_setups:
-                    print(" - {}".format(s))
-                    print("    {}".format(defined_setups[s]))
+                    print(f" - {s}")
+                    print(f"    {defined_setups[s]}")
             print()
             if postexec_all:
                 print("global postexec:")
                 for p in postexec_all:
-                    print("\t{}".format(p))
+                    print(f"\t{p}")
     else:
         if args.selection and args.auto:
             parser.error("cannot --auto and select")
@@ -292,11 +290,11 @@ def _main(argv):
                 selection = valid_setups[0]
 
         if selection not in defined_setups:
-            parser.error("{} is not a known setup".format(selection))
+            parser.error(f"{selection} is not a known setup")
         if selection not in valid_setups:
-            parser.error("{} is currently not a valid setup".format(selection))
+            parser.error(f"{selection} is currently not a valid setup")
 
-        print("picked configuration: {}".format(selection))
+        print(f"picked configuration: {selection}")
         if v.picked_full_config:
             print(defined_setups[selection])
         _apply_setup(infs, defined_setups[selection], dry=args.dry)

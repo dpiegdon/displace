@@ -35,7 +35,7 @@ def setdpi(scale):
                  + ("2" if scale[0] >= 1.5 else "1")
                  + ">}]\"")
     gdkqt.append("gsettings set org.gnome.desktop.interface scaling-factor "
-                 + "{scale}".format(scale=2 if scale[0] >= 1.5 else 1))
+                 + f"{2 if scale[0] >= 1.5 else 1}")
     gdkqt.append("gsettings set org.gnome.settings-daemon.plugins.xsettings "
                  + "overrides \"{'Xft/DPI': <"
                  + ("215" if scale[0] >= 1.5 else "120")
@@ -197,27 +197,27 @@ virtual_720p = DESK(
 # order defines priority for --auto:
 defined_setups = OrderedDict([
         # laptop
-        ("dock",              dock_lowdpi),
-        ("dock-highdpi",      dock_highdpi),
-        ("landscape",         landscape_lowdpi),
-        ("landscape-highdpi", landscape_highdpi),
-        ("portrait",          portrait_lowdpi),
-        ("portrait-highdpi",  portrait_highdpi),
-        ("inverted",          inverted_lowdpi),
-        ("inverted-highdpi",  inverted_highdpi),
-        ("present-left",      present_left_lowdpi),
-        ("present-top",       present_top_lowdpi),
-        ("present-right",     present_right_lowdpi),
-        ("present-hdmi-right",present_hdmi_right_lowdpi),
+        ("dock",               dock_lowdpi),
+        ("dock-highdpi",       dock_highdpi),
+        ("landscape",          landscape_lowdpi),
+        ("landscape-highdpi",  landscape_highdpi),
+        ("portrait",           portrait_lowdpi),
+        ("portrait-highdpi",   portrait_highdpi),
+        ("inverted",           inverted_lowdpi),
+        ("inverted-highdpi",   inverted_highdpi),
+        ("present-left",       present_left_lowdpi),
+        ("present-top",        present_top_lowdpi),
+        ("present-right",      present_right_lowdpi),
+        ("present-hdmi-right", present_hdmi_right_lowdpi),
         # home desktop
-        ("homeA",             homeA),
-        ("homeB",             homeB),
-        ("homeLEFT",          homeLEFT),
-        ("homeOUT",           homeOUT),
+        ("homeA",              homeA),
+        ("homeB",              homeB),
+        ("homeLEFT",           homeLEFT),
+        ("homeOUT",            homeOUT),
         # virtual machines
-        ("virtual_2k",        virtual_2k),
-        ("virtual_1080p",     virtual_1080p),
-        ("virtual_720p",      virtual_720p),
+        ("virtual_2k",         virtual_2k),
+        ("virtual_1080p",      virtual_1080p),
+        ("virtual_720p",       virtual_720p),
         ])
 
 postexec_all = []
