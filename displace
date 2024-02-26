@@ -288,6 +288,8 @@ def _main(argv):
             valid_setups = _filter_valid_setups(infs, defined_setups)
             if valid_setups:
                 selection = valid_setups[0]
+            else:
+                parser.error("No valid selection available. Try `-f'.")
 
         if selection not in defined_setups:
             parser.error(f"{selection} is not a known setup")
