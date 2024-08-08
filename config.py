@@ -152,6 +152,22 @@ present_hdmi_right_lowdpi = DESK(
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
+present_hdmi_right_rotated_right_lowdpi = DESK(
+        ATNA33TP06(mode=LOWDPI_MODE),
+        OUT("HDMI-2",
+            location=("right-of", "Text:ATNA33TP06-0"),
+            rotation="right"),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
+        )
+
+present_hdmi_right_rotated_left_lowdpi = DESK(
+        ATNA33TP06(mode=LOWDPI_MODE),
+        OUT("HDMI-2",
+            location=("right-of", "Text:ATNA33TP06-0"),
+            rotation="left"),
+        postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
+        )
+
 # == home desktop configurations ==============================================
 
 homeA = DESK(
@@ -208,7 +224,9 @@ defined_setups = OrderedDict([
         ("present-left",       present_left_lowdpi),
         ("present-top",        present_top_lowdpi),
         ("present-right",      present_right_lowdpi),
-        ("present-hdmi-right", present_hdmi_right_lowdpi),
+        ("present-hdmi-r",     present_hdmi_right_lowdpi),
+        ("present-hdmi-rrr",   present_hdmi_right_rotated_right_lowdpi),
+        ("present-hdmi-rrl",   present_hdmi_right_rotated_left_lowdpi),
         # home desktop
         ("homeA",              homeA),
         ("homeB",              homeB),
