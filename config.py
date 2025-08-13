@@ -194,6 +194,14 @@ homeOUT = DESK(
             rotation="left"),
         )
 
+homeCENTERa = DESK(
+        OUT("Name:DELL_U2515H", primary=True),
+        )
+
+homeCENTERb = DESK(
+        OUT("Name:RX-V685", primary=True),
+        )
+
 # == random virtual machine setups ============================================
 
 virtual_2k = DESK(
@@ -232,6 +240,8 @@ defined_setups = OrderedDict([
         ("homeB",              homeB),
         ("homeLEFT",           homeLEFT),
         ("homeOUT",            homeOUT),
+        ("homeCENTERa",        homeCENTERa),
+        ("homeCENTERb",        homeCENTERb),
         # virtual machines
         ("virtual_2k",         virtual_2k),
         ("virtual_1080p",      virtual_1080p),
