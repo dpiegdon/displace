@@ -173,15 +173,13 @@ present_hdmi_right_rotated_left_lowdpi = DESK(
 homeA = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        OUT("Name:EA232WMi", location=("right-of", "previous"),
-            rotation="left"),
+        OUT("Name:EA232WMi", location=("right-of", "previous")),
         )
 
 homeB = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:RX-V685", location=("right-of", "previous")),
-        OUT("Name:EA232WMi", location=("right-of", "previous"),
-            rotation="left"),
+        OUT("Name:EA232WMi", location=("right-of", "previous")),
         )
 
 homeLEFT = DESK(
@@ -190,8 +188,7 @@ homeLEFT = DESK(
 
 homeOUT = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
-        OUT("Name:EA232WMi", location=("right-of", "previous"),
-            rotation="left"),
+        OUT("Name:EA232WMi", location=("right-of", "previous")),
         )
 
 homeCENTERa = DESK(
