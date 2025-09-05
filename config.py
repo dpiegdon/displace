@@ -18,7 +18,7 @@ def setdpi(scale):
 
     xdef_map = {r"Xft\.dpi":        215 if scale[0] >= 1.5 else 120,
                 r"Xcursor\.size":    48 if scale[0] >= 1.5 else 16,
-                r"XTerm\*faceSize":  15 if scale[0] >= 1.5 else 8}
+                r"XTerm\*faceSize":  18 if scale[0] >= 1.5 else 9}
     xdef = [sedi(srcfile="~/.Xdefaults",
                  cmd=r"s/^{k}:[ \t].*$/{k}: {v}/".format(k=k, v=v))
             for (k, v) in xdef_map.items()]
