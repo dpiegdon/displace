@@ -84,17 +84,19 @@ def ATNA33TP06(primary=True, mode=HIGHDPI_MODE, **kwargs):
 
 
 dock_highdpi = DESK(
-        OUT("Name:BenQ_LCD", scale=highdpi_scale, rotation="left"),
+        OUT("Name:BenQ_LCD",
+            scale=highdpi_scale, rotation="left", primary=True),
         OUT("Name:DELL_U2515H", scale=highdpi_scale,
             location=("right-of", "previous")),
-        ATNA33TP06(location=("below", "previous")),
+        ATNA33TP06(location=("below", "previous"), primary=False),
         postexec=setdpi(highdpi_scale) + laptop_setup_input_devices("normal")
         )
 
 dock_lowdpi = DESK(
-        OUT("Name:BenQ_LCD", rotation="left"),
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
-        ATNA33TP06(location=("below", "previous"), mode=LOWDPI_MODE),
+        ATNA33TP06(location=("below", "previous"),
+                   mode=LOWDPI_MODE, primary=False),
         postexec=setdpi(lowdpi_scale) + laptop_setup_input_devices("normal")
         )
 
