@@ -74,13 +74,10 @@ from cfghelper import xinput_set, xinput_enable, xinput_map
 
 # == laptop configurations ====================================================
 
-LOWDPI_MODE = (1920, 1080)
-HIGHDPI_MODE = "max_area"
-
 
 LAPTOP_MAIN="Text:NV140WUM-N49"
 
-def laptop_main_out(primary=True, mode=HIGHDPI_MODE, **kwargs):
+def laptop_main_out(primary=True, mode="max_area", **kwargs):
     """laptop main display"""
     return OUT(LAPTOP_MAIN, primary=primary, mode=mode, **kwargs)
 
@@ -90,38 +87,38 @@ dock = DESK(
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous")),
         laptop_main_out(location=("below", "Name:DELL_U2515H"),
-                   mode=LOWDPI_MODE, primary=False),
+                        primary=False),
         )
 
 landscape = DESK(
-        laptop_main_out(mode=LOWDPI_MODE),
+        laptop_main_out(),
         )
 
 portrait = DESK(
-        laptop_main_out(mode=LOWDPI_MODE, rotation="left"),
+        laptop_main_out(rotation="left"),
         )
 
 inverted = DESK(
-        laptop_main_out(mode=LOWDPI_MODE, rotation="inverted"),
+        laptop_main_out(rotation="inverted"),
         )
 
 present_left = DESK(
         OUT("HDMI-1"),
-        laptop_main_out(mode=LOWDPI_MODE, location=("right-of", "HDMI-1")),
+        laptop_main_out(location=("right-of", "HDMI-1")),
         )
 
 present_top = DESK(
         OUT("HDMI-1"),
-        laptop_main_out(mode=LOWDPI_MODE, location=("below", "HDMI-1")),
+        laptop_main_out(location=("below", "HDMI-1")),
         )
 
 present_right = DESK(
-        laptop_main_out(mode=LOWDPI_MODE),
+        laptop_main_out(),
         OUT("HDMI-1", location=("right-of", LAPTOP_MAIN)),
         )
 
 present_hdmi_right = DESK(
-        laptop_main_out(mode=LOWDPI_MODE),
+        laptop_main_out(),
         OUT("HDMI-2", location=("right-of", LAPTOP_MAIN)),
         )
 
