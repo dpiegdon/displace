@@ -80,10 +80,32 @@ def laptop_main_out(primary=True, mode="max_area", **kwargs):
     return OUT(LAPTOP_MAIN, primary=primary, mode=mode, **kwargs)
 
 
-dock = DESK(
+dockA = DESK(
         OUT("Name:BenQ_LCD", rotation="left", primary=True),
         OUT("Name:DELL_U2515H", location=("right-of", "previous")),
         OUT("Name:EA232WMi", location=("right-of", "previous")),
+        laptop_main_out(location=("below", "Name:DELL_U2515H"),
+                        primary=False),
+        )
+
+dockB = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
+        OUT("Name:RX-V685", location=("right-of", "previous")),
+        OUT("Name:EA232WMi", location=("right-of", "previous")),
+        laptop_main_out(location=("below", "Name:DELL_U2515H"),
+                        primary=False),
+        )
+
+dockLMA = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
+        OUT("Name:DELL_U2515H", location=("right-of", "previous")),
+        laptop_main_out(location=("below", "Name:DELL_U2515H"),
+                        primary=False),
+        )
+
+dockLMB = DESK(
+        OUT("Name:BenQ_LCD", rotation="left", primary=True),
+        OUT("Name:RX-V685", location=("right-of", "previous")),
         laptop_main_out(location=("below", "Name:DELL_U2515H"),
                         primary=False),
         )
@@ -171,7 +193,10 @@ virtual_720p = DESK(
 defined_setups = OrderedDict([
         # laptop
         ("landscape",          landscape),
-        ("dock",               dock),
+        ("dockA",              dockA),
+        ("dockB",              dockB),
+        ("dockLMA",            dockLMA),
+        ("dockLMB",            dockLMB),
         ("portrait",           portrait),
         ("inverted",           inverted),
         ("present-left",       present_left),
