@@ -2,7 +2,8 @@ from collections import OrderedDict
 
 from cfghelper import DesktopSetup as DESK
 from cfghelper import OutputSetup as OUT
-from cfghelper import xinput_set, xinput_enable, xinput_map
+from cfghelper import xinput_enable, xinput_map, xinput_set
+
 
 # scale 1:1 if using a low-dpi display in low-dpi context
 #lowdpi_scale = (1, 1)
@@ -15,6 +16,9 @@ from cfghelper import xinput_set, xinput_enable, xinput_map
 #    applications """
 #    def sedi(srcfile, cmd):
 #        return f"sed -i -e '{cmd}' {srcfile}"
+#
+#    def gset(suffix, item, value):
+#        return f"gsettings set org.gnome.{suffix} {item} {value}"
 #
 #    xdef_map = {r"Xft\.dpi":        215 if scale[0] >= 1.5 else 120,
 #                r"Xcursor\.size":    48 if scale[0] >= 1.5 else 16,
@@ -30,20 +34,14 @@ from cfghelper import xinput_set, xinput_enable, xinput_map
 #    gdkqt = [sedi(srcfile="~/.environment.local",
 #                  cmd=r"s/^export {k}=.*$/export {k}={v}/".format(k=k, v=v))
 #             for (k, v) in gdkqt_map.items()]
-#    gdkqt.append("gsettings set org.gnome.settings-daemon.plugins.xsettings "
-#                 + "overrides \"[{'Gdk/WindowScalingFactor', <"
-#                 + ("2" if scale[0] >= 1.5 else "1")
-#                 + ">}]\"")
-#    gdkqt.append("gsettings set org.gnome.desktop.interface scaling-factor "
-#                 + f"{2 if scale[0] >= 1.5 else 1}")
-#    gdkqt.append("gsettings set org.gnome.settings-daemon.plugins.xsettings "
-#                 + "overrides \"{'Xft/DPI': <"
-#                 + ("215" if scale[0] >= 1.5 else "120")
-#                 + "00"
-#                 + ">}\"")
-#    gdkqt.append("gsettings set org.gnome.desktop.interface "
-#                 + "text-scaling-factor "
-#                 + ("2" if scale[0] >= 1.5 else "1"))
+#    gdkqt += [gset("settings-daemon.plugins.xsettings", "overrides",
+#                   "\"[{'Gdk/WindowScalingFactor', <" + ("2" if scale[0] >= 1.5 else "1") + ">}]\""),
+#              gset("settings-daemon.plugins.xsettings", "overrides",
+#                   ("215" if scale[0] >= 1.5 else "120") + "00" + ">}\""),
+#              gset("desktop.interface", "scaling-factor",
+#                   f"{2 if scale[0] >= 1.5 else 1}"),
+#              gset("desktop.interface", "text-scaling-factor",
+#                   ("2" if scale[0] >= 1.5 else "1"))]
 #
 #    # FIXME add DPI-fixer for ~/.config/fontconfig/fonts.conf
 #    return xdef + gdkqt
